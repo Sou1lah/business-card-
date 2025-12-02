@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Business Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {margin: 0; padding: 0;}
+        body {
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            font-family: 'Ubuntu Mono', monospace;
+            transition: background 0.5s ease;
+        }
+        
+        body.light-theme {
+            background: #f0f0f0;
+        }
+        
+        canvas {
+            display: block;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            width: 100%;
+            height: 100%;
+        }
+        
+        body.light-theme canvas {
+            filter: blur(5px) brightness(0.9);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(10, 10, 10, 0.7);
+            border-radius: 50%;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            color: #0f0;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        body.light-theme .theme-toggle {
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .scene {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 300px;
+            perspective: 1000px;
+            z-index: 100;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transform-origin: center center;
+            transition: transform 0.8s;
+            border-radius: 13px;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card__face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 13px;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .card__face--front {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .card.is-flipped .card__face--front {
+            visibility: hidden;
+            opacity: 0;
+        }
+        
+        body.light-theme .card__face--front {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 8px 32px rgba(31, 38, 135, 0.15),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+        }
+
+        .card__face--back {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(10px) saturate(180%);
+            -webkit-backdrop-filter: blur(10px) saturate(180%);
+            transform: rotateY(180deg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        body.light-theme .card__face--back {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+        }
+        
+        .top-section {
+            height: 70%;
+            display: flex;
+            padding: 25px;
+        }
+        
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-right: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.5s ease;
+            backdrop-filter: blur(5px);
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-image: url('https://i.pinimg.com/736x/f8/4b/e9/f84be98bcaf36ef0865dce31ee60a61a.jpg');
+        }
+        
+        body.light-theme .profile-pic {
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .info-item {
+            margin-bottom: 8px;
+            color: #fff;
+            transition: color 0.5s ease;
+        }
+        
+        body.light-theme .info-item {
+            color: #222;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 2px;
+            transition: color 0.5s ease;
+        }
+        
+        body.light-theme .info-label {
+            color: #555;
+        }
+        
+        .info-value {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .name-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .age-grade-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .university {
+            color: #fff;
+        }
+        
+        body.light-theme .university {
+            color: #333;
+        }
+        
+        .university .info-value {
+            color: #fff;
+            font-size: 18px;
+            transition: color 0.5s ease;
+        }
+        
+        body.light-theme .university .info-value {
+            color: #222;
+            font-weight: 700;
+        }
+        
+        .bottom-section {
+            height: 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            padding: 0 25px;
+        }
+        
+        /* .social-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s ease;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        body.light-theme .social-icon {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            color: #333;
+        } */
+         /* Remove or comment out old .social-icon styles and replace with: */
+
+        /* for all social containers*/
+        .socialContainer {
+          width: 52px;
+          height: 52px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          transition-duration: .3s;
+          border-radius: 30%;
+          backdrop-filter: blur(5px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Dark theme */
+        .socialContainer {
+          background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Light theme */
+        body.light-theme .socialContainer {
+          background: rgba(255, 255, 255, 0.4);
+          box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.1),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        /* SVG colors for dark theme */
+        .socialSvg path {
+          fill: #fff;
+          transition: fill 0.3s ease;
+        }
+
+        /* SVG colors for light theme */
+        body.light-theme .socialSvg path {
+          fill: #333;
+        }
+
+        /* Hover effects work for both themes */
+        /* instagram*/
+        .containerOne:hover {
+          background-color: #d62976 !important;
+          transition-duration: .3s;
+        }
+        /* github */
+        .containerTwo.github:hover {
+          background-color: #0a0a0a !important;
+        }
+        /* linkedin*/
+        .containerThree:hover {
+          background-color: #0072b1 !important;
+          transition-duration: .3s;
+        }
+        /* email*/
+        .containerFour:hover {
+          background-color: #EA4335 !important;
+          transition-duration: .3s;
+        }
+        /* twitter (x.com) */
+        .containerFive:hover {
+          background-color: #6fbad3 !important;
+          transition-duration: .3s;
+        }
+
+        /* Make sure hover text stays white */
+        .socialContainer:hover .socialSvg path {
+          fill: #fff !important;
+        }
+
+        /* Keep the animation */
+        .socialContainer:hover .socialSvg {
+          animation: slide-in-top 0.3s both;
+        }
+
+        @keyframes slide-in-top {
+          0% {
+            transform: translateY(-50px);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .socialContainer:active {
+          transform: scale(0.9);
+          transition-duration: .3s;
+        }
+
+        .socialSvg {
+          width: 24px;
+        }
+        
+        .click-instruction {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 14px;
+            z-index: 100;
+            transition: color 0.5s ease;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+        }
+        
+        body.light-theme .click-instruction {
+            color: #333;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Languages section - CLEAR AND VISIBLE (not blurred) */
+        .languages-title {
+            color: #fff;
+            font-size: 22px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 500;
+            transition: color 0.5s ease;
+        }
+        
+        body.light-theme .languages-title {
+            color: #222;
+        }
+        
+        .languages-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 80%;
+            justify-items: center;
+        }
+        
+        .language-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            filter: none !important;
+            -webkit-filter: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            padding: 5px;
+            border: 1px solid;
+        }
+        
+        .language-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .language-text {
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 5px;
+            text-align: center;
+            filter: none !important;
+            -webkit-filter: none !important;
+        }
+        
+        .icon-large {
+            font-size: 24px;
+            filter: none !important;
+            -webkit-filter: none !important;
+        }
+        
+        /* Language-specific colors */
+        .html-icon {
+            background: rgba(227, 79, 38, 0.2);
+            border-color: rgba(227, 79, 38, 0.5) !important;
+            color: #E34F26;
+        }
+        
+        .css-icon {
+            background: rgba(21, 114, 182, 0.2);
+            border-color: rgba(21, 114, 182, 0.5) !important;
+            color: #1572B6;
+        }
+        
+        .js-icon {
+            background: rgba(247, 223, 30, 0.2);
+            border-color: rgba(247, 223, 30, 0.5) !important;
+            color: #F7DF1E;
+        }
+        
+        .php-icon {
+            background: rgba(119, 123, 179, 0.2);
+            border-color: rgba(119, 123, 179, 0.5) !important;
+            color: #777BB3;
+        }
+        
+        .lua-icon {
+            background: rgba(0, 0, 128, 0.2);
+            border-color: rgba(0, 0, 128, 0.5) !important;
+            color: #000080;
+        }
+        
+        .python-icon {
+            background: rgba(53, 114, 165, 0.2);
+            border-color: rgba(53, 114, 165, 0.5) !important;
+            color: #3572A5;
+        }
+        
+        .c-icon {
+            background: rgba(85, 85, 85, 0.2);
+            border-color: rgba(85, 85, 85, 0.5) !important;
+            color: #555555;
+        }
+        
+        .sql-icon {
+            background: rgba(255, 140, 0, 0.2);
+            border-color: rgba(255, 140, 0, 0.5) !important;
+            color: #FF8C00;
+        }
+        
+        /* Light theme adjustments for language icons */
+        body.light-theme .html-icon {
+            background: rgba(227, 79, 38, 0.1);
+            color: #E34F26;
+        }
+        
+        body.light-theme .css-icon {
+            background: rgba(21, 114, 182, 0.1);
+            color: #1572B6;
+        }
+        
+        body.light-theme .js-icon {
+            background: rgba(247, 223, 30, 0.1);
+            color: #D4B900;
+        }
+        
+        body.light-theme .php-icon {
+            background: rgba(119, 123, 179, 0.1);
+            color: #777BB3;
+        }
+        
+        body.light-theme .lua-icon {
+            background: rgba(0, 0, 128, 0.1);
+            color: #000080;
+        }
+        
+        body.light-theme .python-icon {
+            background: rgba(53, 114, 165, 0.1);
+            color: #3572A5;
+        }
+        
+        body.light-theme .c-icon {
+            background: rgba(85, 85, 85, 0.1);
+            color: #555555;
+        }
+        
+        body.light-theme .sql-icon {
+            background: rgba(255, 140, 0, 0.1);
+            color: #FF8C00;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <canvas></canvas>
+    
+    <div class="scene">
+        <div class="card">
+            <div class="card__face card__face--front">
+                <div class="top-section">
+                    <div class="profile-pic">
+                        <!-- Image added via CSS background-image -->
+                    </div>
+                    <div class="info-container">
+                        <div class="name-row">
+                            <div class="info-item">
+                                <div class="info-label">FIRST NAME</div>
+                                <div class="info-value">SOUILAH</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">LAST NAME</div>
+                                <div class="info-value">AHMED WAEL</div>
+                            </div>
+                        </div>
+                        <div class="age-grade-row">
+                            <div class="info-item">
+                                <div class="info-label">AGE</div>
+                                <div class="info-value">20</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">GRADE</div>
+                                <div class="info-value">LICENCE 3</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">DEGREE</div>
+                            <div class="info-value">COMPUTER SCIENCE</div>
+                        </div>
+                        <div class="info-item university">
+                            <div class="info-label">UNIVERSITY</div>
+                            <div class="info-value">BADJI MOKHTAR UNIVERSITY</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                  <a href="https://www.instagram.com/waaaeeelll_08/" target="_blank" class="socialContainer containerOne instagram">
+                    <svg class="socialSvg instagramSvg" viewBox="0 0 16 16">
+                      <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 1 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"></path>
+                    </svg>
+                  </a>
+
+                  <a href="https://github.com/Sou1lah" target="_blank" class="socialContainer containerTwo github">
+                    <svg class="socialSvg githubSvg" viewBox="0 0 16 16">
+                      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                  </a>
+
+                  <a href="#" target="_blank" class="socialContainer containerThree linkedin">
+                    <svg class="socialSvg linkdinSvg" viewBox="0 0 448 512">
+                      <path d="M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z"></path>
+                    </svg>
+                  </a>
+
+                  <a href="mailto:ahmedsouilah572@gmail.com" class="socialContainer containerFour email">
+                    <svg class="socialSvg emailSvg" viewBox="0 0 24 24">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"></path>
+                    </svg>
+                  </a>
+              
+                  <a href="https://x.com/wael_souilah" target="_blank" class="socialContainer containerFive twitter">
+                    <svg class="socialSvg twitterSvg" viewBox="0 0 16 16">
+                      <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"></path>
+                    </svg>
+                  </a>
+                </div>
+            </div>
+            
+            <!-- Clean back card with glassy background and language icons -->
+            <div class="card__face card__face--back">
+                <div class="languages-title">CODING LANGUAGES</div>
+                <div class="languages-grid">
+                    <!-- HTML - Orange -->
+                    <div class="language-icon html-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-html5"></i>
+                        </div>
+                        <div class="language-text">HTML</div>
+                    </div>
+                    
+                    <!-- CSS - Blue -->
+                    <div class="language-icon css-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-css3-alt"></i>
+                        </div>
+                        <div class="language-text">CSS</div>
+                    </div>
+                    
+                    <!-- JavaScript - Yellow -->
+                    <div class="language-icon js-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-js"></i>
+                        </div>
+                        <div class="language-text">JS</div>
+                    </div>
+                    
+                    <!-- PHP - Purple -->
+                    <div class="language-icon php-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-php"></i>
+                        </div>
+                        <div class="language-text">PHP</div>
+                    </div>
+                    
+                    <!-- Lua - Dark Blue -->
+                    <div class="language-icon lua-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="language-text">Lua</div>
+                    </div>
+                    
+                    <!-- Python - Blue -->
+                    <div class="language-icon python-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-python"></i>
+                        </div>
+                        <div class="language-text">Python</div>
+                    </div>
+                    
+                    <!-- C - Gray -->
+                    <div class="language-icon c-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-c"></i>
+                        </div>
+                        <div class="language-text">C</div>
+                    </div>
+                    
+                    <!-- SQL - Orange -->
+                    <div class="language-icon sql-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="language-text">SQL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="click-instruction">Click card to flip</div>
+    </div>
+    
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        themeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('light-theme');
+            if (document.body.classList.contains('light-theme')) {
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+        
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeIcon.className = 'fas fa-sun';
+        }
+        
+        var canvas = document.querySelector('canvas'),
+            ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        var letters = 'ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ';
+        letters = letters.split('');
+        
+        var fontSize = 10,
+            columns = canvas.width / fontSize;
+        
+        var drops = [];
+        for (var i = 0; i < columns; i++) {
+          drops[i] = Math.random() * canvas.height / fontSize;
+        }
+        
+        var colors = ['#ff0000', '#ff3300', '#ff6600', '#ff9900', '#ffcc00', 
+                      '#ffff00', '#ccff00', '#99ff00', '#66ff00', '#33ff00',
+                      '#00ff00', '#00ff33', '#00ff66', '#00ff99', '#00ffcc',
+                      '#00ffff', '#00ccff', '#0099ff', '#0066ff', '#0033ff',
+                      '#0000ff', '#3300ff', '#6600ff', '#9900ff', '#cc00ff',
+                      '#ff00ff', '#ff00cc', '#ff0099', '#ff0066', '#ff0033'];
+        
+        function draw() {
+          if (document.body.classList.contains('light-theme')) {
+            ctx.fillStyle = 'rgba(255, 255, 255, .03)';
+          } else {
+            ctx.fillStyle = 'rgba(0, 0, 0, .08)';
+          }
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          for (var i = 0; i < drops.length; i++) {
+            var text = letters[Math.floor(Math.random() * letters.length)];
+            var colorIndex = (i + Math.floor(Date.now() / 80)) % colors.length;
+            ctx.fillStyle = colors[colorIndex];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            drops[i] += 1.5;
+            if (drops[i] * fontSize > canvas.height && Math.random() > .90) {
+              drops[i] = 0;
+            }
+          }
+        }
+        
+        setInterval(draw, 25);
+
+        // Card flip functionality - stop propagation on social media links
+        var card = document.querySelector('.card');
+        var socialLinks = document.querySelectorAll('.social-icon');
+        
+        card.addEventListener('click', function(e) {
+            // Only flip if click is not on a social media link
+            if (!e.target.closest('.social-icon')) {
+                this.classList.toggle('is-flipped');
+            }
+        });
+        
+        // Prevent card flip when clicking on social media links
+        socialLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+        
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            columns = canvas.width / fontSize;
+            drops = [];
+            for (var i = 0; i < columns; i++) {
+                drops[i] = Math.random() * canvas.height / fontSize;
+            }
+        });
+    </script>
+</body>
+</html>
