@@ -252,202 +252,241 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== STATISTICS SYSTEM WITH ANIMATION =====
+    // ===== WORKING STATISTICS SYSTEM =====
     let viewCount = 0;
     let likeCount = 0;
-    let uniqueVisitors = 0;
     let userHasLiked = false;
-
+    let totalLiked = 0;
+    
     const STATS_API = 'update_stats.php';
-    const GET_STATS_API = 'get_stats.php';
-
+    
+    // Load stats from server
     async function loadStats() {
         try {
-            const response = await fetch(GET_STATS_API);
+            const formData = new FormData();
+            formData.append('action', 'get_stats');
+        
+            const response = await fetch(STATS_API, {
+                method: 'POST',
+                body: formData
+            });
+        
             const data = await response.json();
-
+            
             if (data.success) {
                 viewCount = data.views;
                 likeCount = data.likes;
-                uniqueVisitors = data.unique_visitors;
-                userHasLiked = data.has_liked || false;
-
-                // Update UI
+                totalLiked = data.total_liked;
+                userHasLiked = data.has_liked;
+                
                 updateCounters();
-
-                // Update like button state
+                
+                // Update like button visual state
                 const likeBtn = document.getElementById('likeBtn');
                 if (userHasLiked) {
                     likeBtn.classList.add('liked');
                 } else {
                     likeBtn.classList.remove('liked');
                 }
+                
+                console.log('Stats loaded:', data);
             }
         } catch (error) {
             console.error('Error loading stats:', error);
+            // Fallback to localStorage
             loadLocalStats();
         }
     }
-
+    
+    // Fallback to localStorage
     function loadLocalStats() {
         const savedViews = localStorage.getItem('card_views');
         const savedLikes = localStorage.getItem('card_likes');
         const savedLiked = localStorage.getItem('user_has_liked');
-
+    
         if (savedViews) viewCount = parseInt(savedViews);
         if (savedLikes) likeCount = parseInt(savedLikes);
         if (savedLiked) userHasLiked = savedLiked === 'true';
-
+    
         updateCounters();
     }
-
+    
+    // Update counters on page
     function updateCounters() {
         const viewCountEl = document.getElementById('viewCount');
         const likeCountEl = document.getElementById('likeCount');
         const popupViewCount = document.getElementById('popupViewCount');
         const popupLikeCount = document.getElementById('popupLikeCount');
-        const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
         const likedByCount = document.getElementById('likedByCount');
-
+    
         if (viewCountEl) viewCountEl.textContent = abbreviateNumber(viewCount);
         if (likeCountEl) likeCountEl.textContent = abbreviateNumber(likeCount);
         if (popupViewCount) popupViewCount.textContent = viewCount.toLocaleString();
         if (popupLikeCount) popupLikeCount.textContent = likeCount.toLocaleString();
-        if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = uniqueVisitors.toLocaleString();
-        if (likedByCount) likedByCount.textContent = 'Loading...';
+        if (likedByCount) likedByCount.textContent = totalLiked.toLocaleString();
     }
-
+    
+    // Abbreviate large numbers
     function abbreviateNumber(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
     }
-
+    
+    // Track view on page load
     async function trackView() {
         try {
             const formData = new FormData();
             formData.append('action', 'add_view');
-
+        
             const response = await fetch(STATS_API, {
                 method: 'POST',
                 body: formData
             });
-
+        
             const data = await response.json();
             if (data.success) {
                 viewCount = data.views;
                 updateCounters();
+                console.log('View tracked:', data);
             }
         } catch (error) {
             console.error('Error tracking view:', error);
+            // Fallback
             viewCount++;
             localStorage.setItem('card_views', viewCount);
             updateCounters();
         }
     }
-
+    
+    // Handle like/unlike - FIXED VERSION
     async function handleLike() {
         const likeBtn = document.getElementById('likeBtn');
-
+        
+        // Prevent double clicking during animation
+        if (likeBtn.classList.contains('animating')) return;
+        likeBtn.classList.add('animating');
+        
         // Add animation class
         likeBtn.classList.add('liked');
-
+        
         // Add haptic feedback
-        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+        
         try {
             const formData = new FormData();
             formData.append('action', 'toggle_like');
-
+        
             const response = await fetch(STATS_API, {
                 method: 'POST',
                 body: formData
             });
-
+        
             const data = await response.json();
+            
             if (data.success) {
                 likeCount = data.likes;
+                totalLiked = data.total_liked;
                 userHasLiked = data.has_liked;
-
-                // Update UI
+                
+                console.log('Like toggled:', data);
+                
+                // Update counters
                 updateCounters();
-
-                // If user unliked, remove the animation class after animation completes
+                
+                // If user unliked, remove animation after it plays
                 if (!userHasLiked) {
                     setTimeout(() => {
                         likeBtn.classList.remove('liked');
                     }, 600);
                 }
+            } else {
+                console.error('Server error:', data);
+                // Fallback: toggle locally
+                toggleLikeLocally(likeBtn);
             }
         } catch (error) {
             console.error('Error handling like:', error);
-            // Fallback: toggle like locally
-            userHasLiked = !userHasLiked;
-            if (userHasLiked) {
-                likeCount++;
-            } else {
-                likeCount = Math.max(0, likeCount - 1);
-                // Remove animation if unliked
-                setTimeout(() => {
-                    likeBtn.classList.remove('liked');
-                }, 600);
-            }
-            localStorage.setItem('card_likes', likeCount);
-            localStorage.setItem('user_has_liked', userHasLiked);
-            updateCounters();
+            // Fallback: toggle locally
+            toggleLikeLocally(likeBtn);
         }
+        
+        // Re-enable clicking after animation
+        setTimeout(() => {
+            likeBtn.classList.remove('animating');
+        }, 600);
     }
-
+    
+    // Fallback for local toggling
+    function toggleLikeLocally(likeBtn) {
+        userHasLiked = !userHasLiked;
+        
+        if (userHasLiked) {
+            likeCount++;
+        } else {
+            likeCount = Math.max(0, likeCount - 1);
+            // Remove animation if unliked
+            setTimeout(() => {
+                likeBtn.classList.remove('liked');
+            }, 600);
+        }
+        
+        localStorage.setItem('card_likes', likeCount);
+        localStorage.setItem('user_has_liked', userHasLiked);
+        updateCounters();
+    }
+    
+    // Show stats popup (public - everyone can see)
     async function showStatsPopup() {
         try {
             const formData = new FormData();
             formData.append('action', 'get_stats');
-
+        
             const response = await fetch(STATS_API, {
                 method: 'POST',
                 body: formData
             });
-
+        
             const data = await response.json();
+            
             if (data.success) {
                 const statsPopup = document.getElementById('statsPopup');
                 const popupViewCount = document.getElementById('popupViewCount');
                 const popupLikeCount = document.getElementById('popupLikeCount');
-                const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
                 const likedByCount = document.getElementById('likedByCount');
-
+            
                 if (popupViewCount) popupViewCount.textContent = data.views.toLocaleString();
                 if (popupLikeCount) popupLikeCount.textContent = data.likes.toLocaleString();
-                if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = data.unique_visitors.toLocaleString();
                 if (likedByCount) likedByCount.textContent = data.total_liked.toLocaleString();
-
+            
                 statsPopup.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
         } catch (error) {
             console.error('Error showing stats:', error);
-            // Show local stats if server fails
+            // Show local stats
             const statsPopup = document.getElementById('statsPopup');
-            const likedByCount = document.getElementById('likedByCount');
-            if (likedByCount) likedByCount.textContent = 'Unknown';
             statsPopup.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
     }
-
+    
     function closeStatsPopup() {
         const statsPopup = document.getElementById('statsPopup');
         statsPopup.classList.remove('active');
         document.body.style.overflow = '';
     }
-
-    // ===== EVENT LISTENERS FOR STATS =====
+    
+    // ===== EVENT LISTENERS =====
+    // Initialize stats
     loadStats();
-
+    
+    // Track view after page loads
     setTimeout(() => {
         trackView();
     }, 1000);
-
+    
+    // View button click - shows stats popup
     const viewBtn = document.getElementById('viewBtn');
     if (viewBtn) {
         viewBtn.addEventListener('click', function(e) {
@@ -455,7 +494,8 @@ document.addEventListener('DOMContentLoaded', function() {
             showStatsPopup();
         });
     }
-
+    
+    // Like button click
     const likeBtn = document.getElementById('likeBtn');
     if (likeBtn) {
         likeBtn.addEventListener('click', function(e) {
@@ -463,12 +503,14 @@ document.addEventListener('DOMContentLoaded', function() {
             handleLike();
         });
     }
-
+    
+    // Close stats popup button
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', closeStatsPopup);
     }
-
+    
+    // Close stats popup when clicking outside
     const statsPopup = document.getElementById('statsPopup');
     if (statsPopup) {
         statsPopup.addEventListener('click', function(e) {
@@ -477,19 +519,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
+    
     // Close popup with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeStatsPopup();
-        }
-    });
-
-    // Load initial like state
-    window.addEventListener('load', function() {
-        const likeBtn = document.getElementById('likeBtn');
-        if (userHasLiked) {
-            likeBtn.classList.add('liked');
         }
     });
 });
