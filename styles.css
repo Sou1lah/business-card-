@@ -1716,7 +1716,6 @@ body.light-theme .admin-warning-content p {
         transform: scale(2);
     }
 }
->
 /* Light theme adjustments */
 body.light-theme .stat-btn.like-button {
     background: rgba(0, 150, 0, 0.2);

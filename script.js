@@ -252,25 +252,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== WORKING STATISTICS SYSTEM =====
+    // ===== GLOBAL STATISTICS SYSTEM =====
     let viewCount = 0;
     let likeCount = 0;
     let userHasLiked = false;
     let totalLiked = 0;
     
-    const STATS_API = 'update_stats.php';
+    const STATS_API = 'update_stats.php'; // ONLY ONE PHP FILE
     
     // Load stats from server
     async function loadStats() {
         try {
-            const formData = new FormData();
-            formData.append('action', 'get_stats');
-        
-            const response = await fetch(STATS_API, {
-                method: 'POST',
-                body: formData
-            });
-        
+            console.log('Loading stats from server...');
+            const response = await fetch(STATS_API + '?action=get_stats&t=' + Date.now());
             const data = await response.json();
             
             if (data.success) {
@@ -279,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 totalLiked = data.total_liked;
                 userHasLiked = data.has_liked;
                 
+                console.log('Stats loaded:', data);
                 updateCounters();
                 
                 // Update like button visual state
@@ -288,17 +283,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     likeBtn.classList.remove('liked');
                 }
-                
-                console.log('Stats loaded:', data);
             }
         } catch (error) {
             console.error('Error loading stats:', error);
-            // Fallback to localStorage
+            console.log('Falling back to localStorage...');
             loadLocalStats();
         }
     }
     
-    // Fallback to localStorage
     function loadLocalStats() {
         const savedViews = localStorage.getItem('card_views');
         const savedLikes = localStorage.getItem('card_likes');
@@ -311,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounters();
     }
     
-    // Update counters on page
     function updateCounters() {
         const viewCountEl = document.getElementById('viewCount');
         const likeCountEl = document.getElementById('likeCount');
@@ -326,7 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (likedByCount) likedByCount.textContent = totalLiked.toLocaleString();
     }
     
-    // Abbreviate large numbers
     function abbreviateNumber(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -336,65 +326,55 @@ document.addEventListener('DOMContentLoaded', function() {
     // Track view on page load
     async function trackView() {
         try {
-            const formData = new FormData();
-            formData.append('action', 'add_view');
-        
-            const response = await fetch(STATS_API, {
-                method: 'POST',
-                body: formData
-            });
-        
+            console.log('Tracking view...');
+            const response = await fetch(STATS_API + '?action=add_view&t=' + Date.now());
             const data = await response.json();
+            
             if (data.success) {
                 viewCount = data.views;
-                updateCounters();
                 console.log('View tracked:', data);
+                updateCounters();
             }
         } catch (error) {
             console.error('Error tracking view:', error);
-            // Fallback
             viewCount++;
             localStorage.setItem('card_views', viewCount);
             updateCounters();
         }
     }
     
-    // Handle like/unlike - FIXED VERSION
+    // Handle like/unlike
     async function handleLike() {
         const likeBtn = document.getElementById('likeBtn');
         
-        // Prevent double clicking during animation
         if (likeBtn.classList.contains('animating')) return;
         likeBtn.classList.add('animating');
         
-        // Add animation class
+        // Show animation immediately
         likeBtn.classList.add('liked');
         
-        // Add haptic feedback
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
         
         try {
+            console.log('Toggling like...');
             const formData = new FormData();
             formData.append('action', 'toggle_like');
-        
+            
             const response = await fetch(STATS_API, {
                 method: 'POST',
                 body: formData
             });
-        
+            
             const data = await response.json();
+            console.log('Server response:', data);
             
             if (data.success) {
                 likeCount = data.likes;
                 totalLiked = data.total_liked;
                 userHasLiked = data.has_liked;
                 
-                console.log('Like toggled:', data);
-                
-                // Update counters
                 updateCounters();
                 
-                // If user unliked, remove animation after it plays
                 if (!userHasLiked) {
                     setTimeout(() => {
                         likeBtn.classList.remove('liked');
@@ -402,22 +382,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 console.error('Server error:', data);
-                // Fallback: toggle locally
                 toggleLikeLocally(likeBtn);
             }
         } catch (error) {
-            console.error('Error handling like:', error);
-            // Fallback: toggle locally
+            console.error('Error toggling like:', error);
             toggleLikeLocally(likeBtn);
         }
         
-        // Re-enable clicking after animation
         setTimeout(() => {
             likeBtn.classList.remove('animating');
         }, 600);
     }
     
-    // Fallback for local toggling
     function toggleLikeLocally(likeBtn) {
         userHasLiked = !userHasLiked;
         
@@ -425,7 +401,6 @@ document.addEventListener('DOMContentLoaded', function() {
             likeCount++;
         } else {
             likeCount = Math.max(0, likeCount - 1);
-            // Remove animation if unliked
             setTimeout(() => {
                 likeBtn.classList.remove('liked');
             }, 600);
@@ -436,17 +411,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCounters();
     }
     
-    // Show stats popup (public - everyone can see)
+    // Show stats popup
     async function showStatsPopup() {
         try {
-            const formData = new FormData();
-            formData.append('action', 'get_stats');
-        
-            const response = await fetch(STATS_API, {
-                method: 'POST',
-                body: formData
-            });
-        
+            console.log('Showing stats popup...');
+            const response = await fetch(STATS_API + '?action=get_stats&t=' + Date.now());
             const data = await response.json();
             
             if (data.success) {
@@ -464,7 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error showing stats:', error);
-            // Show local stats
             const statsPopup = document.getElementById('statsPopup');
             statsPopup.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -478,15 +446,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ===== EVENT LISTENERS =====
-    // Initialize stats
+    // Initialize
     loadStats();
     
-    // Track view after page loads
     setTimeout(() => {
         trackView();
     }, 1000);
     
-    // View button click - shows stats popup
     const viewBtn = document.getElementById('viewBtn');
     if (viewBtn) {
         viewBtn.addEventListener('click', function(e) {
@@ -495,7 +461,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Like button click
     const likeBtn = document.getElementById('likeBtn');
     if (likeBtn) {
         likeBtn.addEventListener('click', function(e) {
@@ -504,13 +469,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close stats popup button
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', closeStatsPopup);
     }
     
-    // Close stats popup when clicking outside
     const statsPopup = document.getElementById('statsPopup');
     if (statsPopup) {
         statsPopup.addEventListener('click', function(e) {
@@ -520,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close popup with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeStatsPopup();
