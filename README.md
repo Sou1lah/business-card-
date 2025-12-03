@@ -1,2 +1,2 @@
 # business card : 
-![Preview](assets/preview.gif)
+<img src="assets/preview.gif" width="300" />
