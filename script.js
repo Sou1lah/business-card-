@@ -1,26 +1,37 @@
-// Mobile-optimized JavaScript for Business Card - FIREBASE VERSION
+// Mobile-optimized JavaScript for Business Card - FINAL VERSION
 document.addEventListener('DOMContentLoaded', function() {
-    // ===== FIREBASE CONFIGURATION =====
-    // Replace these with YOUR actual Firebase config values
+    // ===== FIREBASE INITIALIZATION =====
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY_HERE",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyByEj8DX--AVwkmV9nM3NrqPI280EZIEfQ",
+        authDomain: "likesandviews-6f8be.firebaseapp.com",
+        projectId: "likesandviews-6f8be",
+        storageBucket: "likesandviews-6f8be.firebasestorage.app",
+        messagingSenderId: "834747682410",
+        appId: "1:834747682410:web:7455de4faaf949d68a4413",
+        measurementId: "G-BWL04Z0CNZ"
     };
 
-    // Initialize Firebase
-    try {
-        firebase.initializeApp(firebaseConfig);
-    } catch (error) {
-        console.log("Firebase already initialized");
+    // Initialize Firebase (using Firebase v8 from CDN)
+    let db;
+    if (typeof firebase !== 'undefined') {
+        try {
+            // Check if Firebase is already initialized
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                firebase.app(); // if already initialized, use that one
+            }
+            db = firebase.firestore();
+            console.log("Firebase initialized successfully!");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            db = null;
+        }
+    } else {
+        console.error("Firebase is not loaded! Check if scripts are included.");
+        db = null;
     }
     
-    const db = firebase.firestore();
-    console.log("Firebase initialized successfully!");
-
     // ===== THEME TOGGLE =====
     const themeToggle = document.getElementById('themeToggle');
     let themeIcon;
@@ -273,14 +284,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== FIREBASE STATISTICS SYSTEM =====
+    // ===== GLOBAL STATISTICS WITH FIREBASE =====
     let viewCount = 0;
     let likeCount = 0;
     let userHasLiked = false;
+    let totalLiked = 0;
     let uniqueVisitors = 0;
-    let likedBy = 0;
     
-    // Generate a unique user ID
+    // Generate unique user ID
     function getUserId() {
         let userId = localStorage.getItem('card_user_id');
         if (!userId) {
@@ -290,21 +301,29 @@ document.addEventListener('DOMContentLoaded', function() {
         return userId;
     }
     
-    // Update counters on the page
+    // Update counters display
     function updateCounters() {
         const viewCountEl = document.getElementById('viewCount');
         const likeCountEl = document.getElementById('likeCount');
         const popupViewCount = document.getElementById('popupViewCount');
         const popupLikeCount = document.getElementById('popupLikeCount');
-        const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
         const likedByCount = document.getElementById('likedByCount');
-        
+        const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
+
         if (viewCountEl) viewCountEl.textContent = abbreviateNumber(viewCount);
         if (likeCountEl) likeCountEl.textContent = abbreviateNumber(likeCount);
         if (popupViewCount) popupViewCount.textContent = viewCount.toLocaleString();
         if (popupLikeCount) popupLikeCount.textContent = likeCount.toLocaleString();
+        if (likedByCount) likedByCount.textContent = totalLiked.toLocaleString();
         if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = uniqueVisitors.toLocaleString();
-        if (likedByCount) likedByCount.textContent = likedBy.toLocaleString();
+        
+        // Update like button visual state
+        const likeBtn = document.getElementById('likeBtn');
+        if (userHasLiked) {
+            likeBtn.classList.add('liked');
+        } else {
+            likeBtn.classList.remove('liked');
+        }
     }
     
     function abbreviateNumber(num) {
@@ -316,10 +335,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load stats from Firebase
     async function loadStats() {
         try {
+            if (!db) {
+                console.log('Firebase not available, using localStorage');
+                loadLocalStats();
+                return;
+            }
+            
             console.log('Loading stats from Firebase...');
             
-            // Get the stats document
-            const statsDoc = await db.collection('stats').doc('cardStats').get();
+            // Get stats document
+            const statsDoc = await db.collection('stats').doc('card_stats').get();
             
             if (statsDoc.exists) {
                 const data = statsDoc.data();
@@ -327,84 +352,114 @@ document.addEventListener('DOMContentLoaded', function() {
                 likeCount = data.likes || 0;
                 uniqueVisitors = data.uniqueVisitors || 0;
                 
-                // Check if user has already liked
-                const userId = getUserId();
-                const likeDoc = await db.collection('likes').doc(userId).get();
-                userHasLiked = likeDoc.exists;
-                
-                // Get liked count
+                // Count total liked users
                 const likesSnapshot = await db.collection('likes').get();
-                likedBy = likesSnapshot.size;
+                totalLiked = likesSnapshot.size;
                 
-                console.log('Stats loaded from Firebase:', { viewCount, likeCount, userHasLiked });
-                updateCounters();
+                // Check if current user has liked
+                const userId = getUserId();
+                const userLikeDoc = await db.collection('likes').doc(userId).get();
+                userHasLiked = userLikeDoc.exists;
                 
-                // Update like button visual state
-                const likeBtn = document.getElementById('likeBtn');
-                if (userHasLiked) {
-                    likeBtn.classList.add('liked');
-                } else {
-                    likeBtn.classList.remove('liked');
-                }
+                console.log('Stats loaded from Firebase:', { 
+                    views: viewCount, 
+                    likes: likeCount, 
+                    uniqueVisitors: uniqueVisitors,
+                    totalLiked, 
+                    userHasLiked 
+                });
             } else {
-                // Create initial stats document
-                await db.collection('stats').doc('cardStats').set({
+                // Create initial stats
+                await db.collection('stats').doc('card_stats').set({
                     views: 0,
                     likes: 0,
                     uniqueVisitors: 0,
-                    updatedAt: new Date()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                console.log('Created initial stats document');
+                console.log('Created initial stats in Firebase');
             }
+            
+            updateCounters();
         } catch (error) {
             console.error('Error loading stats from Firebase:', error);
+            console.log('Falling back to localStorage...');
             loadLocalStats();
         }
     }
     
-    // Fallback to localStorage if Firebase fails
     function loadLocalStats() {
         const savedViews = localStorage.getItem('card_views');
         const savedLikes = localStorage.getItem('card_likes');
         const savedLiked = localStorage.getItem('user_has_liked');
-        
+
         if (savedViews) viewCount = parseInt(savedViews);
         if (savedLikes) likeCount = parseInt(savedLikes);
         if (savedLiked) userHasLiked = savedLiked === 'true';
-        
-        console.log('Loaded local stats:', { viewCount, likeCount, userHasLiked });
+
         updateCounters();
     }
     
-    // Track a view
+    // Track view (once per session)
     async function trackView() {
+        if (sessionStorage.getItem('view_tracked')) {
+            console.log('View already tracked this session');
+            return;
+        }
+        
         try {
-            const today = new Date().toDateString();
-            const lastView = localStorage.getItem('card_last_view');
+            if (!db) {
+                viewCount++;
+                localStorage.setItem('card_views', viewCount);
+                updateCounters();
+                sessionStorage.setItem('view_tracked', 'true');
+                return;
+            }
             
-            // Only count one view per day per user
-            if (lastView !== today) {
-                console.log('Tracking view in Firebase...');
+            console.log('Tracking view in Firebase...');
+            
+            const userId = getUserId();
+            
+            // Check if this is a new visitor
+            const visitorDoc = await db.collection('visitors').doc(userId).get();
+            const isNewVisitor = !visitorDoc.exists;
+            
+            // Prepare update data
+            const updateData = {
+                views: firebase.firestore.FieldValue.increment(1),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // If new visitor, increment unique visitors
+            if (isNewVisitor) {
+                updateData.uniqueVisitors = firebase.firestore.FieldValue.increment(1);
                 
-                // Update views count
-                await db.collection('stats').doc('cardStats').update({
-                    views: firebase.firestore.FieldValue.increment(1),
-                    updatedAt: new Date()
+                // Record this visitor
+                await db.collection('visitors').doc(userId).set({
+                    firstVisit: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastVisit: firebase.firestore.FieldValue.serverTimestamp(),
+                    userAgent: navigator.userAgent.substring(0, 100)
                 });
                 
-                viewCount++;
-                localStorage.setItem('card_last_view', today);
-                updateCounters();
-                
-                console.log('View tracked successfully');
+                uniqueVisitors++;
             } else {
-                console.log('View already counted today');
+                // Update last visit time for returning visitor
+                await db.collection('visitors').doc(userId).update({
+                    lastVisit: firebase.firestore.FieldValue.serverTimestamp()
+                });
             }
+            
+            // Update stats
+            await db.collection('stats').doc('card_stats').update(updateData);
+            
+            viewCount++;
+            sessionStorage.setItem('view_tracked', 'true');
+            updateCounters();
+            console.log('View tracked successfully. New visitor:', isNewVisitor);
         } catch (error) {
             console.error('Error tracking view:', error);
-            // Fallback to localStorage
             viewCount++;
             localStorage.setItem('card_views', viewCount);
+            sessionStorage.setItem('view_tracked', 'true');
             updateCounters();
         }
     }
@@ -416,52 +471,50 @@ document.addEventListener('DOMContentLoaded', function() {
         if (likeBtn.classList.contains('animating')) return;
         likeBtn.classList.add('animating');
         
-        // Show animation immediately for better UX
+        // Show animation immediately
         likeBtn.classList.add('liked');
         
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
         
         try {
+            if (!db) {
+                throw new Error('Firebase not available');
+            }
+            
+            console.log('Toggling like in Firebase...');
             const userId = getUserId();
             
-            // Check if user has already liked
-            const likeDoc = await db.collection('likes').doc(userId).get();
-            const alreadyLiked = likeDoc.exists;
-            
-            if (alreadyLiked) {
-                // Unlike: remove from likes collection and decrement count
-                await db.collection('likes').doc(userId).delete();
-                await db.collection('stats').doc('cardStats').update({
-                    likes: firebase.firestore.FieldValue.increment(-1),
-                    updatedAt: new Date()
+            if (userHasLiked) {
+                // Remove like
+                await db.collection('stats').doc('card_stats').update({
+                    likes: firebase.firestore.FieldValue.increment(-1)
                 });
-                
+                await db.collection('likes').doc(userId).delete();
                 likeCount = Math.max(0, likeCount - 1);
+                totalLiked = Math.max(0, totalLiked - 1);
                 userHasLiked = false;
-                likedBy--;
+                localStorage.setItem('user_has_liked', 'false');
                 
-                // Remove liked class after animation
                 setTimeout(() => {
                     likeBtn.classList.remove('liked');
                 }, 600);
             } else {
-                // Like: add to likes collection and increment count
+                // Add like
+                await db.collection('stats').doc('card_stats').update({
+                    likes: firebase.firestore.FieldValue.increment(1)
+                });
                 await db.collection('likes').doc(userId).set({
-                    timestamp: new Date(),
-                    userId: userId
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    userAgent: navigator.userAgent.substring(0, 100)
                 });
-                await db.collection('stats').doc('cardStats').update({
-                    likes: firebase.firestore.FieldValue.increment(1),
-                    updatedAt: new Date()
-                });
-                
                 likeCount++;
+                totalLiked++;
                 userHasLiked = true;
-                likedBy++;
+                localStorage.setItem('user_has_liked', 'true');
             }
             
             updateCounters();
-            console.log('Like toggled successfully:', { userHasLiked, likeCount });
+            console.log('Like toggled successfully:', { likes: likeCount, userHasLiked });
         } catch (error) {
             console.error('Error toggling like:', error);
             toggleLikeLocally(likeBtn);
@@ -472,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 600);
     }
     
-    // Fallback for like/unlike
     function toggleLikeLocally(likeBtn) {
         userHasLiked = !userHasLiked;
         
@@ -493,28 +545,55 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show stats popup
     async function showStatsPopup() {
         try {
-            console.log('Showing stats popup...');
-            
-            // Refresh stats from Firebase
-            const statsDoc = await db.collection('stats').doc('cardStats').get();
-            if (statsDoc.exists) {
-                const data = statsDoc.data();
-                viewCount = data.views || 0;
-                likeCount = data.likes || 0;
-                uniqueVisitors = data.uniqueVisitors || 0;
+            if (!db) {
+                // Show local stats
+                const statsPopup = document.getElementById('statsPopup');
+                const popupViewCount = document.getElementById('popupViewCount');
+                const popupLikeCount = document.getElementById('popupLikeCount');
+                const likedByCount = document.getElementById('likedByCount');
+                const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
                 
-                // Get current liked count
-                const likesSnapshot = await db.collection('likes').get();
-                likedBy = likesSnapshot.size;
+                if (popupViewCount) popupViewCount.textContent = viewCount.toLocaleString();
+                if (popupLikeCount) popupLikeCount.textContent = likeCount.toLocaleString();
+                if (likedByCount) likedByCount.textContent = totalLiked.toLocaleString();
+                if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = uniqueVisitors.toLocaleString();
                 
-                updateCounters();
+                statsPopup.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                return;
             }
             
-            const statsPopup = document.getElementById('statsPopup');
-            statsPopup.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            console.log('Showing stats popup from Firebase...');
+            
+            // Get fresh stats from Firebase
+            const statsDoc = await db.collection('stats').doc('card_stats').get();
+            const likesSnapshot = await db.collection('likes').get();
+            const visitorsSnapshot = await db.collection('visitors').get();
+            
+            if (statsDoc.exists) {
+                const data = statsDoc.data();
+                const statsPopup = document.getElementById('statsPopup');
+                const popupViewCount = document.getElementById('popupViewCount');
+                const popupLikeCount = document.getElementById('popupLikeCount');
+                const likedByCount = document.getElementById('likedByCount');
+                const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
+                
+                if (popupViewCount) popupViewCount.textContent = data.views.toLocaleString();
+                if (popupLikeCount) popupLikeCount.textContent = data.likes.toLocaleString();
+                if (likedByCount) likedByCount.textContent = likesSnapshot.size.toLocaleString();
+                if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = visitorsSnapshot.size.toLocaleString();
+                
+                // Update local variables
+                viewCount = data.views || 0;
+                likeCount = data.likes || 0;
+                totalLiked = likesSnapshot.size;
+                uniqueVisitors = visitorsSnapshot.size;
+                
+                statsPopup.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
         } catch (error) {
-            console.error('Error showing stats popup:', error);
+            console.error('Error showing stats:', error);
             const statsPopup = document.getElementById('statsPopup');
             statsPopup.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -527,10 +606,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.style.overflow = '';
     }
     
-    // ===== INITIALIZE EVERYTHING =====
-    console.log('Initializing business card...');
-    
-    // Load stats first
+    // ===== EVENT LISTENERS =====
+    // Initialize stats
     loadStats();
     
     // Track view after a short delay
@@ -538,8 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
         trackView();
     }, 500);
     
-    // ===== EVENT LISTENERS =====
-    // View button
+    // View button - show stats popup
     const viewBtn = document.getElementById('viewBtn');
     if (viewBtn) {
         viewBtn.addEventListener('click', function(e) {
@@ -557,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close stats popup
+    // Close stats popup button
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', closeStatsPopup);
@@ -608,4 +684,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 600);
         });
     }
+    
+    // Debug function
+    function testFirebase() {
+        console.log('=== Firebase Test ===');
+        console.log('Firebase available:', typeof firebase !== 'undefined');
+        console.log('Firestore available:', typeof firebase.firestore !== 'undefined');
+        console.log('Database instance:', db ? 'Connected' : 'Not connected');
+        console.log('User ID:', getUserId());
+        console.log('Theme:', localStorage.getItem('theme') || 'dark');
+    }
+    
+    // Uncomment to test
+    // testFirebase();
+    
+    // Handle admin button clicks (for future use)
+    document.querySelectorAll('.admin-action').forEach(button => {
+        button.addEventListener('click', function() {
+            const adminWarning = document.getElementById('adminWarning');
+            if (adminWarning) {
+                adminWarning.classList.add('active');
+            }
+        });
+    });
 });
