@@ -2,29 +2,33 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Theme Toggle
     const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = themeToggle.querySelector('i');
+    let themeIcon;
     
-    // Touch event for theme toggle (mobile)
-    themeToggle.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        toggleTheme();
-        // Add haptic feedback if available
-        if (navigator.vibrate) navigator.vibrate(10);
-    });
-    
-    // Click event for theme toggle (desktop/fallback)
-    themeToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        toggleTheme();
-    });
+    if (themeToggle) {
+        themeIcon = themeToggle.querySelector('i');
+        
+        // Touch event for theme toggle (mobile)
+        themeToggle.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            toggleTheme();
+            // Add haptic feedback if available
+            if (navigator.vibrate) navigator.vibrate(10);
+        });
+        
+        // Click event for theme toggle (desktop/fallback)
+        themeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleTheme();
+        });
+    }
     
     function toggleTheme() {
         document.body.classList.toggle('light-theme');
         if (document.body.classList.contains('light-theme')) {
-            themeIcon.className = 'fas fa-sun';
+            if (themeIcon) themeIcon.className = 'fas fa-sun';
             localStorage.setItem('theme', 'light');
         } else {
-            themeIcon.className = 'fas fa-moon';
+            if (themeIcon) themeIcon.className = 'fas fa-moon';
             localStorage.setItem('theme', 'dark');
         }
     }
@@ -33,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
-        themeIcon.className = 'fas fa-sun';
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
     }
     
     // Card Flip - Mobile optimized
@@ -41,32 +45,39 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFlipped = false;
     let flipTimeout = null;
     
-    function handleCardFlip() {
-        if (flipTimeout) return;
-        
-        // Add haptic feedback if available
-        if (navigator.vibrate) navigator.vibrate(20);
-        
-        if (!isFlipped) {
-            flipCard.classList.add('flipped');
-            isFlipped = true;
-        } else {
-            flipCard.classList.remove('flipped');
-            isFlipped = false;
+    if (flipCard) {
+        function handleCardFlip() {
+            if (flipTimeout) return;
+            
+            // Add haptic feedback if available
+            if (navigator.vibrate) navigator.vibrate(20);
+            
+            if (!isFlipped) {
+                flipCard.classList.add('flipped');
+                isFlipped = true;
+            } else {
+                flipCard.classList.remove('flipped');
+                isFlipped = false;
+            }
+            
+            // Prevent rapid flipping
+            flipTimeout = setTimeout(() => {
+                flipTimeout = null;
+            }, 600);
         }
         
-        // Prevent rapid flipping
-        flipTimeout = setTimeout(() => {
-            flipTimeout = null;
-        }, 600);
+        // Use both click and touch for maximum compatibility
+        flipCard.addEventListener('click', handleCardFlip);
+        flipCard.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            handleCardFlip();
+        });
+        
+        // Make flip card focusable for keyboard users
+        flipCard.setAttribute('tabindex', '0');
+        flipCard.setAttribute('role', 'button');
+        flipCard.setAttribute('aria-label', 'Business card - tap or click to flip');
     }
-    
-    // Use both click and touch for maximum compatibility
-    flipCard.addEventListener('click', handleCardFlip);
-    flipCard.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        handleCardFlip();
-    });
     
     // Prevent card flip when clicking on social icons or language icons
     document.querySelectorAll('.social-icon, .language-icon').forEach(icon => {
@@ -82,101 +93,106 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Matrix Effect - Optimized for mobile performance
     const canvas = document.getElementById('matrixCanvas');
-    const ctx = canvas.getContext('2d');
     
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    
-    function initMatrix() {
-        resizeCanvas();
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
         
-        // Simplified for mobile performance
-        const letters = '01';
-        const fontSize = 12;
-        const columns = Math.floor(canvas.width / fontSize);
-        const drops = [];
-        
-        for (let i = 0; i < columns; i++) {
-            drops[i] = Math.random() * -100;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
         
-        function draw() {
-            // Clear with trail effect
-            if (document.body.classList.contains('light-theme')) {
-                ctx.fillStyle = 'rgba(240, 240, 240, 0.04)';
-            } else {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+        function initMatrix() {
+            resizeCanvas();
+            
+            // Simplified for mobile performance
+            const letters = '01';
+            const fontSize = 12;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = [];
+            
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
             }
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw characters
-            ctx.font = `${fontSize}px monospace`;
-            
-            for (let i = 0; i < drops.length; i++) {
-                const char = letters[Math.floor(Math.random() * letters.length)];
-                
-                // Simple green color for performance
+            function draw() {
+                // Clear with trail effect
                 if (document.body.classList.contains('light-theme')) {
-                    ctx.fillStyle = '#009900';
+                    ctx.fillStyle = 'rgba(240, 240, 240, 0.04)';
                 } else {
-                    ctx.fillStyle = '#00ff00';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
                 }
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-                drops[i]++;
+                // Draw characters
+                ctx.font = `${fontSize}px monospace`;
                 
-                // Reset drop randomly
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
+                for (let i = 0; i < drops.length; i++) {
+                    const char = letters[Math.floor(Math.random() * letters.length)];
+                    
+                    // Simple green color for performance
+                    if (document.body.classList.contains('light-theme')) {
+                        ctx.fillStyle = '#009900';
+                    } else {
+                        ctx.fillStyle = '#00ff00';
+                    }
+                    
+                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+                    drops[i]++;
+                    
+                    // Reset drop randomly
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
                 }
             }
-        }
-        
-        // Use requestAnimationFrame for smoother animation on mobile
-        let lastTime = 0;
-        function animate(time) {
-            if (time - lastTime > 50) { // Limit to 20fps for mobile performance
-                draw();
-                lastTime = time;
+            
+            // Use requestAnimationFrame for smoother animation on mobile
+            let lastTime = 0;
+            function animate(time) {
+                if (time - lastTime > 50) { // Limit to 20fps for mobile performance
+                    draw();
+                    lastTime = time;
+                }
+                requestAnimationFrame(animate);
             }
             requestAnimationFrame(animate);
         }
-        requestAnimationFrame(animate);
+        
+        // Handle orientation changes and resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCanvas, 250);
+        });
+        
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                resizeCanvas();
+                initMatrix();
+            }, 100);
+        });
+        
+        // Initialize matrix
+        initMatrix();
     }
-    
-    // Handle orientation changes and resize
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(resizeCanvas, 250);
-    });
-    
-    window.addEventListener('orientationchange', function() {
-        setTimeout(function() {
-            resizeCanvas();
-            initMatrix();
-        }, 100);
-    });
     
     // Handle orientation warning
     const orientationWarning = document.getElementById('orientationWarning');
     
     function checkOrientation() {
         if (window.innerHeight < 500 && window.innerWidth > window.innerHeight) {
-            orientationWarning.style.display = 'flex';
+            if (orientationWarning) orientationWarning.style.display = 'flex';
         } else {
-            orientationWarning.style.display = 'none';
+            if (orientationWarning) orientationWarning.style.display = 'none';
         }
     }
     
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
     
-    // Initialize everything
+    // Initialize orientation check
     checkOrientation();
-    initMatrix();
     
     // Add loading state for images
     const profileImage = document.querySelector('.profile-pic img');
@@ -205,20 +221,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add keyboard support for accessibility
     document.addEventListener('keydown', function(e) {
         // Space or Enter to flip card
-        if ((e.key === ' ' || e.key === 'Enter') && document.activeElement === flipCard) {
+        if (flipCard && (e.key === ' ' || e.key === 'Enter') && document.activeElement === flipCard) {
             e.preventDefault();
-            handleCardFlip();
+            flipCard.click();
         }
         // Escape to close orientation warning
-        if (e.key === 'Escape' && orientationWarning.style.display === 'flex') {
+        if (e.key === 'Escape' && orientationWarning && orientationWarning.style.display === 'flex') {
             orientationWarning.style.display = 'none';
         }
     });
-    
-    // Make flip card focusable for keyboard users
-    flipCard.setAttribute('tabindex', '0');
-    flipCard.setAttribute('role', 'button');
-    flipCard.setAttribute('aria-label', 'Business card - tap or click to flip');
     
     // Performance monitoring - log any performance issues
     if ('performance' in window) {
@@ -230,88 +241,95 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     }
-});
-
-// Add service worker for offline support (optional)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').catch(function(error) {
-            console.log('ServiceWorker registration failed:', error);
+    
+    // ===== SLIDING PANEL FUNCTIONALITY =====
+    const panelToggle = document.getElementById('panelToggle');
+    const slidingPanel = document.getElementById('slidingPanel');
+    const panelClose = document.getElementById('panelClose');
+    const panelThemeToggle = document.getElementById('panelThemeToggle');
+    let panelOpen = false;
+    
+    // Create overlay element
+    const overlay = document.createElement('div');
+    overlay.className = 'panel-overlay';
+    document.body.appendChild(overlay);
+    
+    // Toggle panel function
+    function togglePanel() {
+        panelOpen = !panelOpen;
+        if (panelOpen) {
+            slidingPanel.classList.add('open');
+            overlay.classList.add('active');
+            // Update toggle button arrow
+            if (panelToggle) panelToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        } else {
+            slidingPanel.classList.remove('open');
+            overlay.classList.remove('active');
+            // Update toggle button arrow
+            if (panelToggle) panelToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        }
+    }
+    
+    // Event Listeners for panel
+    if (panelToggle) {
+        panelToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            togglePanel();
         });
+    }
+    
+    if (panelClose) {
+        panelClose.addEventListener('click', togglePanel);
+    }
+    
+    // Close panel when clicking on overlay
+    overlay.addEventListener('click', togglePanel);
+    
+    // Close panel when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (panelOpen && slidingPanel && !slidingPanel.contains(e.target) && e.target !== panelToggle) {
+            togglePanel();
+        }
     });
-}
-// Sliding Panel Functionality
-const panelToggle = document.getElementById('panelToggle');
-const slidingPanel = document.getElementById('slidingPanel');
-const panelClose = document.getElementById('panelClose');
-const panelThemeToggle = document.getElementById('panelThemeToggle');
-let panelOpen = false;
-
-// Create overlay element
-const overlay = document.createElement('div');
-overlay.className = 'panel-overlay';
-document.body.appendChild(overlay);
-
-// Toggle panel function
-function togglePanel() {
-    panelOpen = !panelOpen;
-    if (panelOpen) {
-        slidingPanel.classList.add('open');
-        overlay.classList.add('active');
-        // Update toggle button arrow
-        panelToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
-    } else {
-        slidingPanel.classList.remove('open');
-        overlay.classList.remove('active');
-        // Update toggle button arrow
-        panelToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    
+    // Theme toggle from panel
+    if (panelThemeToggle) {
+        panelThemeToggle.addEventListener('click', function() {
+            toggleTheme();
+        });
     }
-}
-
-// Event Listeners
-panelToggle.addEventListener('click', function(e) {
-    e.stopPropagation();
-    togglePanel();
-});
-
-panelClose.addEventListener('click', togglePanel);
-
-// Close panel when clicking on overlay
-overlay.addEventListener('click', togglePanel);
-
-// Close panel when clicking outside on mobile
-document.addEventListener('click', function(e) {
-    if (panelOpen && !slidingPanel.contains(e.target) && e.target !== panelToggle) {
-        togglePanel();
+    
+    // Close panel with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && panelOpen) {
+            togglePanel();
+        }
+    });
+    
+    // Handle QR Code button (empty for now)
+    const qrBtn = document.querySelector('.qr-btn');
+    if (qrBtn) {
+        qrBtn.addEventListener('click', function() {
+            console.log('QR Code button clicked');
+            // Add QR code functionality here
+        });
     }
-});
-
-// Theme toggle from panel
-panelThemeToggle.addEventListener('click', function() {
-    document.body.classList.toggle('light-theme');
-    const icon = themeToggle.querySelector('i');
-    if (document.body.classList.contains('light-theme')) {
-        icon.className = 'fas fa-sun';
-    } else {
-        icon.className = 'fas fa-moon';
+    
+    // Handle Note button (empty for now)
+    const noteBtn = document.querySelector('.note-btn');
+    if (noteBtn) {
+        noteBtn.addEventListener('click', function() {
+            console.log('Leave Note button clicked');
+            // Add note functionality here
+        });
     }
-});
-
-// Close panel with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && panelOpen) {
-        togglePanel();
+    
+    // Add service worker for offline support (optional)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function(error) {
+                console.log('ServiceWorker registration failed:', error);
+            });
+        });
     }
-});
-
-// Handle QR Code button (empty for now)
-document.querySelector('.qr-btn').addEventListener('click', function() {
-    console.log('QR Code button clicked');
-    // Add QR code functionality here
-});
-
-// Handle Note button (empty for now)
-document.querySelector('.note-btn').addEventListener('click', function() {
-    console.log('Leave Note button clicked');
-    // Add note functionality here
 });
