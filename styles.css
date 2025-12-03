@@ -170,7 +170,7 @@ html {
     border: 3px solid rgba(0, 255, 0, 0.5);
     overflow: hidden;
     margin-bottom: 15px;
-    background: linear-gr    adient(45deg, #000, #0a0);
+    background: linear-gradient(45deg, #000, #0a0);
     display: flex;
     align-items: center;
     justify-content: center;
