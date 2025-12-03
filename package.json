@@ -2,13 +2,13 @@
   "name": "business-card",
   "version": "1.0.0",
   "description": "Personal business card site",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "serve ."
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "serve": "^14.2.5"
+    "express": "^4.22.1"
   }
 }

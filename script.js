@@ -257,25 +257,25 @@ document.addEventListener('DOMContentLoaded', function() {
     let likeCount = 0;
     let userHasLiked = false;
     let totalLiked = 0;
-    
-    const STATS_API = 'update_stats.php'; // ONLY ONE PHP FILE
-    
+
+    const STATS_API = '/api'; // Use the Node.js API endpoints
+
     // Load stats from server
     async function loadStats() {
         try {
             console.log('Loading stats from server...');
-            const response = await fetch(STATS_API + '?action=get_stats&t=' + Date.now());
+            const response = await fetch(`${STATS_API}/stats?t=${Date.now()}`);
             const data = await response.json();
-            
+
             if (data.success) {
                 viewCount = data.views;
                 likeCount = data.likes;
                 totalLiked = data.total_liked;
                 userHasLiked = data.has_liked;
-                
+
                 console.log('Stats loaded:', data);
                 updateCounters();
-                
+
                 // Update like button visual state
                 const likeBtn = document.getElementById('likeBtn');
                 if (userHasLiked) {
@@ -290,46 +290,51 @@ document.addEventListener('DOMContentLoaded', function() {
             loadLocalStats();
         }
     }
-    
+
     function loadLocalStats() {
         const savedViews = localStorage.getItem('card_views');
         const savedLikes = localStorage.getItem('card_likes');
         const savedLiked = localStorage.getItem('user_has_liked');
-    
+
         if (savedViews) viewCount = parseInt(savedViews);
         if (savedLikes) likeCount = parseInt(savedLikes);
         if (savedLiked) userHasLiked = savedLiked === 'true';
-    
+
         updateCounters();
     }
-    
+
     function updateCounters() {
         const viewCountEl = document.getElementById('viewCount');
         const likeCountEl = document.getElementById('likeCount');
         const popupViewCount = document.getElementById('popupViewCount');
         const popupLikeCount = document.getElementById('popupLikeCount');
         const likedByCount = document.getElementById('likedByCount');
-    
+
         if (viewCountEl) viewCountEl.textContent = abbreviateNumber(viewCount);
         if (likeCountEl) likeCountEl.textContent = abbreviateNumber(likeCount);
         if (popupViewCount) popupViewCount.textContent = viewCount.toLocaleString();
         if (popupLikeCount) popupLikeCount.textContent = likeCount.toLocaleString();
         if (likedByCount) likedByCount.textContent = totalLiked.toLocaleString();
     }
-    
+
     function abbreviateNumber(num) {
         if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
         if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
         return num.toString();
     }
-    
+
     // Track view on page load
     async function trackView() {
         try {
             console.log('Tracking view...');
-            const response = await fetch(STATS_API + '?action=add_view&t=' + Date.now());
+            const response = await fetch(`${STATS_API}/view`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             const data = await response.json();
-            
+
             if (data.success) {
                 viewCount = data.views;
                 console.log('View tracked:', data);
@@ -342,39 +347,38 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCounters();
         }
     }
-    
+
     // Handle like/unlike
     async function handleLike() {
         const likeBtn = document.getElementById('likeBtn');
-        
+
         if (likeBtn.classList.contains('animating')) return;
         likeBtn.classList.add('animating');
-        
+
         // Show animation immediately
         likeBtn.classList.add('liked');
-        
+
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-        
+
         try {
             console.log('Toggling like...');
-            const formData = new FormData();
-            formData.append('action', 'toggle_like');
-            
-            const response = await fetch(STATS_API, {
+            const response = await fetch(`${STATS_API}/like`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
-            
+
             const data = await response.json();
             console.log('Server response:', data);
-            
+
             if (data.success) {
                 likeCount = data.likes;
                 totalLiked = data.total_liked;
                 userHasLiked = data.has_liked;
-                
+
                 updateCounters();
-                
+
                 if (!userHasLiked) {
                     setTimeout(() => {
                         likeBtn.classList.remove('liked');
@@ -388,15 +392,15 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error toggling like:', error);
             toggleLikeLocally(likeBtn);
         }
-        
+
         setTimeout(() => {
             likeBtn.classList.remove('animating');
         }, 600);
     }
-    
+
     function toggleLikeLocally(likeBtn) {
         userHasLiked = !userHasLiked;
-        
+
         if (userHasLiked) {
             likeCount++;
         } else {
@@ -405,29 +409,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 likeBtn.classList.remove('liked');
             }, 600);
         }
-        
+
         localStorage.setItem('card_likes', likeCount);
         localStorage.setItem('user_has_liked', userHasLiked);
         updateCounters();
     }
-    
+
     // Show stats popup
     async function showStatsPopup() {
         try {
             console.log('Showing stats popup...');
-            const response = await fetch(STATS_API + '?action=get_stats&t=' + Date.now());
+            const response = await fetch(`${STATS_API}/stats?t=${Date.now()}`);
             const data = await response.json();
-            
+
             if (data.success) {
                 const statsPopup = document.getElementById('statsPopup');
                 const popupViewCount = document.getElementById('popupViewCount');
                 const popupLikeCount = document.getElementById('popupLikeCount');
                 const likedByCount = document.getElementById('likedByCount');
-            
+
                 if (popupViewCount) popupViewCount.textContent = data.views.toLocaleString();
                 if (popupLikeCount) popupLikeCount.textContent = data.likes.toLocaleString();
                 if (likedByCount) likedByCount.textContent = data.total_liked.toLocaleString();
-            
+
                 statsPopup.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
@@ -438,21 +442,22 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = 'hidden';
         }
     }
-    
+
     function closeStatsPopup() {
         const statsPopup = document.getElementById('statsPopup');
         statsPopup.classList.remove('active');
         document.body.style.overflow = '';
     }
-    
+
     // ===== EVENT LISTENERS =====
     // Initialize
     loadStats();
-    
+
+    // Track view after a short delay
     setTimeout(() => {
         trackView();
-    }, 1000);
-    
+    }, 500);
+
     const viewBtn = document.getElementById('viewBtn');
     if (viewBtn) {
         viewBtn.addEventListener('click', function(e) {
@@ -460,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
             showStatsPopup();
         });
     }
-    
+
     const likeBtn = document.getElementById('likeBtn');
     if (likeBtn) {
         likeBtn.addEventListener('click', function(e) {
@@ -468,12 +473,12 @@ document.addEventListener('DOMContentLoaded', function() {
             handleLike();
         });
     }
-    
+
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', closeStatsPopup);
     }
-    
+
     const statsPopup = document.getElementById('statsPopup');
     if (statsPopup) {
         statsPopup.addEventListener('click', function(e) {
@@ -482,10 +487,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeStatsPopup();
         }
     });
+
+    // Debug function to test API
+    function testAPI() {
+        console.log('Testing API endpoints...');
+        console.log('Current URL:', window.location.href);
+        console.log('API Base URL:', STATS_API);
+        
+        // Test stats endpoint
+        fetch(`${STATS_API}/stats`)
+            .then(response => {
+                console.log('Stats endpoint status:', response.status);
+                return response.json();
+            })
+            .then(data => console.log('Stats endpoint data:', data))
+            .catch(error => console.error('Stats endpoint error:', error));
+    }
+    
+    // Uncomment to test API
+    // testAPI();
 });
