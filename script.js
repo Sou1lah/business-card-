@@ -238,12 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
         panelThemeToggle.addEventListener('click', toggleTheme);
     }
     
-    const qrBtn = document.querySelector('.qr-btn');
-    if (qrBtn) {
-        qrBtn.addEventListener('click', function() {
-            console.log('QR Code button clicked');
-        });
-    }
+    // REMOVED THE DUPLICATE QR BTN CODE HERE
     
     const noteBtn = document.querySelector('.note-btn');
     if (noteBtn) {
@@ -284,4 +279,71 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('✅ Business Card Loaded Successfully');
+    
+    // ===== QR CODE MODAL =====
+    const qrModal = document.getElementById('qrModal');
+    const qrBtn = document.querySelector('.qr-btn');  // This is the only declaration needed
+    const closeQrBtn = document.getElementById('closeQrBtn');
+    
+    function showQrModal() {
+        if (qrModal) {
+            qrModal.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+    }
+    
+    function hideQrModal() {
+        if (qrModal) {
+            qrModal.classList.remove('active');
+        }
+    }
+    
+    if (qrBtn) {
+        qrBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showQrModal();
+            // Also close the sliding panel if it's open
+            if (panelOpen) {
+                togglePanel();
+            }
+        });
+    }
+    
+    if (closeQrBtn) {
+        closeQrBtn.addEventListener('click', hideQrModal);
+    }
+    
+    if (qrModal) {
+        qrModal.addEventListener('click', function(e) {
+            if (e.target === qrModal) {
+                hideQrModal();
+            }
+        });
+    }
+    
+    // Close QR modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && qrModal && qrModal.classList.contains('active')) {
+            hideQrModal();
+        }
+    });
+    
+    // Handle QR image loading
+    const qrImage = document.querySelector('.qr-image');
+    if (qrImage) {
+        qrImage.addEventListener('load', function() {
+            this.style.opacity = '1';
+        });
+        qrImage.addEventListener('error', function() {
+            console.error('QR code image failed to load');
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'qr-error';
+            errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>QR code image not found</p>';
+            errorMsg.style.color = '#ff3333';
+            errorMsg.style.textAlign = 'center';
+            errorMsg.style.padding = '20px';
+            this.parentElement.appendChild(errorMsg);
+            this.style.display = 'none';
+        });
+    }
 });
