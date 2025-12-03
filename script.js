@@ -240,3 +240,78 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+// Sliding Panel Functionality
+const panelToggle = document.getElementById('panelToggle');
+const slidingPanel = document.getElementById('slidingPanel');
+const panelClose = document.getElementById('panelClose');
+const panelThemeToggle = document.getElementById('panelThemeToggle');
+let panelOpen = false;
+
+// Create overlay element
+const overlay = document.createElement('div');
+overlay.className = 'panel-overlay';
+document.body.appendChild(overlay);
+
+// Toggle panel function
+function togglePanel() {
+    panelOpen = !panelOpen;
+    if (panelOpen) {
+        slidingPanel.classList.add('open');
+        overlay.classList.add('active');
+        // Update toggle button arrow
+        panelToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    } else {
+        slidingPanel.classList.remove('open');
+        overlay.classList.remove('active');
+        // Update toggle button arrow
+        panelToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    }
+}
+
+// Event Listeners
+panelToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    togglePanel();
+});
+
+panelClose.addEventListener('click', togglePanel);
+
+// Close panel when clicking on overlay
+overlay.addEventListener('click', togglePanel);
+
+// Close panel when clicking outside on mobile
+document.addEventListener('click', function(e) {
+    if (panelOpen && !slidingPanel.contains(e.target) && e.target !== panelToggle) {
+        togglePanel();
+    }
+});
+
+// Theme toggle from panel
+panelThemeToggle.addEventListener('click', function() {
+    document.body.classList.toggle('light-theme');
+    const icon = themeToggle.querySelector('i');
+    if (document.body.classList.contains('light-theme')) {
+        icon.className = 'fas fa-sun';
+    } else {
+        icon.className = 'fas fa-moon';
+    }
+});
+
+// Close panel with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && panelOpen) {
+        togglePanel();
+    }
+});
+
+// Handle QR Code button (empty for now)
+document.querySelector('.qr-btn').addEventListener('click', function() {
+    console.log('QR Code button clicked');
+    // Add QR code functionality here
+});
+
+// Handle Note button (empty for now)
+document.querySelector('.note-btn').addEventListener('click', function() {
+    console.log('Leave Note button clicked');
+    // Add note functionality here
+});
