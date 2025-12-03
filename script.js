@@ -246,26 +246,27 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Leave Note button clicked');
         });
     }
-    
+        
     // ===== PANEL FLIP BUTTON =====
-    const panelFlipBtn = document.getElementById('panelFlipBtn');
-    if (panelFlipBtn && flipCard) {
-        panelFlipBtn.addEventListener('click', function() {
-            if (flipTimeout) return;
-            
-            if (!isFlipped) {
-                flipCard.classList.add('flipped');
-                isFlipped = true;
-            } else {
-                flipCard.classList.remove('flipped');
-                isFlipped = false;
-            }
-            
-            flipTimeout = setTimeout(() => {
-                flipTimeout = null;
-            }, 600);
-        });
-    }
+    // This button now shows portfolio modal instead of flipping the card
+    document.getElementById('panelFlipBtn')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        console.log('Portfolio button clicked - showing modal');
+        
+        // Show portfolio modal
+        const portfolioModal = document.getElementById('portfolioModal');
+        if (portfolioModal) {
+            portfolioModal.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+        
+        // Close the sliding panel if it's open
+        if (panelOpen) {
+            togglePanel();
+        }
+    });
     
     // ===== ADMIN WARNING (Optional - keep if you want it) =====
     const closeAdminBtn = document.getElementById('closeAdminBtn');
@@ -346,4 +347,110 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.display = 'none';
         });
     }
+
+    // ===== COMING SOON MODALS =====
+    const portfolioModal = document.getElementById('portfolioModal');
+    const downloadModal = document.getElementById('downloadModal');
+    const portfolioBtn = document.getElementById('panelFlipBtn'); // Portfolio button
+    const downloadBtn = document.querySelector('.download-btn'); // Download CV button
+    const closePortfolioBtn = document.getElementById('closePortfolioBtn');
+    const closeDownloadBtn = document.getElementById('closeDownloadBtn');
+
+    // Function to show portfolio modal
+    function showPortfolioModal() {
+        if (portfolioModal) {
+            portfolioModal.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+    }
+
+    // Function to show download modal
+    function showDownloadModal() {
+        if (downloadModal) {
+            downloadModal.classList.add('active');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+    }
+
+    // Function to hide portfolio modal
+    function hidePortfolioModal() {
+        if (portfolioModal) {
+            portfolioModal.classList.remove('active');
+        }
+    }
+
+    // Function to hide download modal
+    function hideDownloadModal() {
+        if (downloadModal) {
+            downloadModal.classList.remove('active');
+        }
+    }
+
+    // Portfolio button event listener
+    if (portfolioBtn) {
+        // Remove the existing flip functionality
+        portfolioBtn.removeEventListener('click', function() {});
+
+        // Add new functionality
+        portfolioBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Portfolio button clicked');
+            showPortfolioModal();
+            // Close the sliding panel if it's open
+            if (panelOpen) {
+                togglePanel();
+            }
+        });
+    }
+
+    // Download CV button event listener
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('Download CV button clicked');
+            showDownloadModal();
+            // Close the sliding panel if it's open
+            if (panelOpen) {
+                togglePanel();
+            }
+        });
+    }
+
+    // Close buttons event listeners
+    if (closePortfolioBtn) {
+        closePortfolioBtn.addEventListener('click', hidePortfolioModal);
+    }
+
+    if (closeDownloadBtn) {
+        closeDownloadBtn.addEventListener('click', hideDownloadModal);
+    }
+
+    // Close modals when clicking outside
+    if (portfolioModal) {
+        portfolioModal.addEventListener('click', function(e) {
+            if (e.target === portfolioModal) {
+                hidePortfolioModal();
+            }
+        });
+    }
+
+    if (downloadModal) {
+        downloadModal.addEventListener('click', function(e) {
+            if (e.target === downloadModal) {
+                hideDownloadModal();
+            }
+        });
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (portfolioModal && portfolioModal.classList.contains('active')) {
+                hidePortfolioModal();
+            }
+            if (downloadModal && downloadModal.classList.contains('active')) {
+                hideDownloadModal();
+            }
+        }
+    });
 });
