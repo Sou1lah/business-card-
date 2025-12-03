@@ -923,7 +923,7 @@ body.light-theme .sql-icon {
 /* Toggle Button for Sliding Panel */
 .panel-toggle {
     position: fixed;
-    top: 30px; /* Position below theme toggle */
+    top: 10px; /* Position below theme toggle */
     right: 15px;
     width: 44px;
     height: 44px;
