@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Matrix Business Card</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Theme Toggle -->
@@ -27,7 +27,7 @@
     <div class="card-container">
         <div class="flip-card" id="flipCard">
             <!-- Front Side -->
-            <div class="card-face card-front">
+            <div class="card-side front-side">
                 <div class="profile-section">
                     <div class="profile-pic">
                         <img src="https://i.pinimg.com/736x/f8/4b/e9/f84be98bcaf36ef0865dce31ee60a61a.jpg" alt="">
@@ -72,7 +72,7 @@
             </div>
             
             <!-- Back Side -->
-            <div class="card-face card-back">
+            <div class="card-side back-side">
                 <h2 class="languages-title">CODING LANGUAGES</h2>
                 <div class="languages-grid">
                     <!-- HTML - Orange -->
@@ -142,161 +142,9 @@
             </div>
         </div>
         
+        <div class="flip-instruction">Tap card to flip</div>
     </div>
 
-    <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        themeToggle.addEventListener('click', function() {
-            document.body.classList.toggle('light-theme');
-            if (document.body.classList.contains('light-theme')) {
-                themeIcon.className = 'fas fa-sun';
-                localStorage.setItem('theme', 'light');
-            } else {
-                themeIcon.className = 'fas fa-moon';
-                localStorage.setItem('theme', 'dark');
-            }
-        });
-        
-        // Load saved theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-            themeIcon.className = 'fas fa-sun';
-        }
-        
-        // Card Flip
-        const flipCard = document.getElementById('flipCard');
-        
-        flipCard.addEventListener('click', function(e) {
-            // Don't flip if clicking on social icons
-            if (!e.target.closest('.social-icon') && !e.target.closest('.language-icon')) {
-                this.classList.toggle('flipped');
-            }
-        });
-        
-        // Matrix Effect
-        const canvas = document.getElementById('matrixCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        
-        function initMatrix() {
-            resizeCanvas();
-            
-            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%"\'#&_(),.;:?!\\|{}<>[]^~';
-            const fontSize = 14;
-            const columns = Math.floor(canvas.width / fontSize);
-            const drops = [];
-            
-            for (let i = 0; i < columns; i++) {
-                drops[i] = Math.random() * -100;
-            }
-            
-            function draw() {
-                // Semi-transparent black background for trail effect
-                if (document.body.classList.contains('light-theme')) {
-                    ctx.fillStyle = 'rgba(240, 240, 240, 0.05)';
-                } else {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                }
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw the characters
-                ctx.font = `${fontSize}px monospace`;
-                
-                for (let i = 0; i < drops.length; i++) {
-                    // Random character
-                    const char = letters[Math.floor(Math.random() * letters.length)];
-                    
-                    // Green gradient effect
-                    const gradient = ctx.createLinearGradient(0, drops[i] * fontSize, 0, (drops[i] + 1) * fontSize);
-                    
-                    if (document.body.classList.contains('light-theme')) {
-                        gradient.addColorStop(0, '#006600');
-                        gradient.addColorStop(0.5, '#009900');
-                        gradient.addColorStop(1, '#00cc00');
-                    } else {
-                        gradient.addColorStop(0, '#00ff00');
-                        gradient.addColorStop(0.5, '#33ff33');
-                        gradient.addColorStop(1, '#66ff66');
-                    }
-                    
-                    ctx.fillStyle = gradient;
-                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-                    
-                    // Move drop down
-                    drops[i]++;
-                    
-                    // Randomly reset drop to top
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                }
-            }
-            
-            // Animation loop
-            setInterval(draw, 50);
-        }
-        
-        // Handle orientation changes
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', function() {
-            setTimeout(resizeCanvas, 100);
-        });
-        
-        // Initialize
-        initMatrix();
-        
-        // Touch device optimizations
-        if ('ontouchstart' in window) {
-            document.body.classList.add('touch-device');
-            
-            // Prevent zoom on double tap
-            document.addEventListener('touchstart', function(e) {
-                if (e.touches.length > 1) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            // Add haptic feedback on social icon tap (if supported)
-            const socialIcons = document.querySelectorAll('.social-icon, .language-icon');
-            socialIcons.forEach(icon => {
-                icon.addEventListener('touchstart', function() {
-                    if (navigator.vibrate) {
-                        navigator.vibrate(10);
-                    }
-                });
-            });
-        }
-        
-        // Prevent context menu on long press
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
-        
-        // Handle orientation warning
-        const orientationWarning = document.getElementById('orientationWarning');
-        
-        function checkOrientation() {
-            if (window.innerHeight < 500 && window.innerWidth > window.innerHeight) {
-                orientationWarning.style.display = 'flex';
-            } else {
-                orientationWarning.style.display = 'none';
-            }
-        }
-        
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-        
-        // Initial check
-        checkOrientation();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
