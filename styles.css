@@ -1548,3 +1548,224 @@ body.light-theme .admin-warning-content p {
         overflow-y: auto;
     }
 }
+/* ===== ANIMATED LIKE BUTTON STYLES ===== */
+.stat-btn.like-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 255, 0, 0.2);
+    border: 2px solid rgba(0, 255, 0, 0.5);
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: relative;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+.stat-btn.like-button:active {
+    transform: scale(0.88);
+    background: rgba(0, 255, 0, 0.3);
+}
+
+.stat-btn.like-button:before {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 0.3em 0.6em rgba(0, 0, 0, 0.3);
+    border-radius: inherit;
+    transition: inherit;
+}
+
+.stat-btn.like-button:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 255, 0, 0.1);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.like-wrapper {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.like-wrapper > * {
+    margin: auto;
+    grid-area: 1 / 1;
+}
+
+.heart {
+    width: 20px;
+    height: 20px;
+    display: block;
+    transform-origin: center 80%;
+}
+
+.heart > path {
+    stroke: #ff3333;
+    stroke-width: 2;
+    fill: transparent;
+    transition: fill 0.5s cubic-bezier(.7,0,.3,1);
+}
+
+/* Liked state */
+.stat-btn.like-button.liked .heart > path {
+    fill: #ff3333;
+}
+
+.stat-btn.like-button.liked .heart {
+    animation: heart-bounce 0.5s cubic-bezier(.7,0,.3,1);
+}
+
+@keyframes heart-bounce {
+    40% {
+        transform: scale(0.7);
+    }
+    0%, 80%, 100% {
+        transform: scale(1);
+    }
+}
+
+/* Particles */
+.particles {
+    width: 1px;
+    height: 1px;
+}
+
+.particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 4px;
+    width: 4px;
+    border-radius: 2px;
+    background-color: var(--color);
+    --percentage: calc( var(--i) / var(--total-particles) );
+    --Θ: calc( var(--percentage) * 1turn );
+    transform: translate(-50%, -50%) rotate(var(--Θ)) translateY(0) scaleY(0);
+    transition: all 0.5s cubic-bezier(.7,0,.3,1);
+}
+
+.stat-btn.like-button.liked .particle {
+    animation: particles-out 0.6s cubic-bezier(.7,0,.3,1) forwards;
+}
+
+@keyframes particles-out {
+    50% {
+        height: 12px;
+    }
+    50%, 60% {
+        height: 12px;
+        transform: translate(-50%, -50%) rotate(var(--Θ)) translateY(15px) scale(1);
+    }
+    60% {
+        height: 8px;
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(var(--Θ)) translateY(20px) scale(0);
+    }
+}
+
+/* Ripple effect */
+.ripple {
+    height: 44px;
+    width: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.ripple:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #ff3333;
+    border-radius: inherit;
+    transform: scale(0);
+}
+
+.stat-btn.like-button.liked .ripple:before {
+    animation: ripple-out 0.5s cubic-bezier(.7,0,.3,1);
+}
+
+@keyframes ripple-out {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(5);
+    }
+}
+
+/* Light theme adjustments */
+body.light-theme .stat-btn.like-button {
+    background: rgba(0, 150, 0, 0.2);
+    border: 2px solid rgba(0, 180, 0, 0.5);
+}
+
+body.light-theme .heart > path {
+    stroke: #d00;
+}
+
+body.light-theme .stat-btn.like-button.liked .heart > path {
+    fill: #d00;
+}
+
+body.light-theme .ripple:before {
+    border-color: #d00;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .stat-btn.like-button {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .heart {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .ripple {
+        height: 42px;
+        width: 42px;
+    }
+}
+
+@media (max-width: 380px) {
+    .stat-btn.like-button {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .heart {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .ripple {
+        height: 40px;
+        width: 40px;
+    }
+}

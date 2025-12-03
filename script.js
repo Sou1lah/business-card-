@@ -252,14 +252,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== STATISTICS SYSTEM =====
+    // ===== STATISTICS SYSTEM WITH ANIMATION =====
     let viewCount = 0;
     let likeCount = 0;
     let uniqueVisitors = 0;
     let userHasLiked = false;
-    let isAdmin = false;
 
-    const ADMIN_PASSWORD = 'your_secret_password_here'; // CHANGE THIS!
     const STATS_API = 'update_stats.php';
     const GET_STATS_API = 'get_stats.php';
 
@@ -273,7 +271,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 likeCount = data.likes;
                 uniqueVisitors = data.unique_visitors;
                 userHasLiked = data.has_liked || false;
+
+                // Update UI
                 updateCounters();
+
+                // Update like button state
+                const likeBtn = document.getElementById('likeBtn');
+                if (userHasLiked) {
+                    likeBtn.classList.add('liked');
+                } else {
+                    likeBtn.classList.remove('liked');
+                }
             }
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -284,9 +292,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadLocalStats() {
         const savedViews = localStorage.getItem('card_views');
         const savedLikes = localStorage.getItem('card_likes');
+        const savedLiked = localStorage.getItem('user_has_liked');
 
         if (savedViews) viewCount = parseInt(savedViews);
         if (savedLikes) likeCount = parseInt(savedLikes);
+        if (savedLiked) userHasLiked = savedLiked === 'true';
 
         updateCounters();
     }
@@ -304,22 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (popupViewCount) popupViewCount.textContent = viewCount.toLocaleString();
         if (popupLikeCount) popupLikeCount.textContent = likeCount.toLocaleString();
         if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = uniqueVisitors.toLocaleString();
-        if (likedByCount) likedByCount.textContent = 'N/A'; // Will be updated when admin views
-
-        const likeBtn = document.getElementById('likeBtn');
-        if (likeBtn) {
-            if (userHasLiked) {
-                likeBtn.style.background = 'rgba(255, 50, 50, 0.3)';
-                likeBtn.style.borderColor = 'rgba(255, 50, 50, 0.6)';
-                likeBtn.innerHTML = '<i class="fas fa-heart" style="color:#ff3333"></i>' + 
-                                   (likeCountEl ? `<span class="stat-badge">${abbreviateNumber(likeCount)}</span>` : '');
-            } else {
-                likeBtn.style.background = '';
-                likeBtn.style.borderColor = '';
-                likeBtn.innerHTML = '<i class="fas fa-heart"></i>' + 
-                                   (likeCountEl ? `<span class="stat-badge">${abbreviateNumber(likeCount)}</span>` : '');
-            }
-        }
+        if (likedByCount) likedByCount.textContent = 'Loading...';
     }
 
     function abbreviateNumber(num) {
@@ -352,6 +347,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function handleLike() {
+        const likeBtn = document.getElementById('likeBtn');
+
+        // Add animation class
+        likeBtn.classList.add('liked');
+
+        // Add haptic feedback
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
         try {
             const formData = new FormData();
             formData.append('action', 'toggle_like');
@@ -366,23 +369,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 likeCount = data.likes;
                 userHasLiked = data.has_liked;
 
-                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-
-                const likeBtn = document.getElementById('likeBtn');
-                likeBtn.classList.add('pulse');
-                setTimeout(() => {
-                    likeBtn.classList.remove('pulse');
-                }, 300);
-
+                // Update UI
                 updateCounters();
+
+                // If user unliked, remove the animation class after animation completes
+                if (!userHasLiked) {
+                    setTimeout(() => {
+                        likeBtn.classList.remove('liked');
+                    }, 600);
+                }
             }
         } catch (error) {
             console.error('Error handling like:', error);
+            // Fallback: toggle like locally
             userHasLiked = !userHasLiked;
             if (userHasLiked) {
                 likeCount++;
             } else {
                 likeCount = Math.max(0, likeCount - 1);
+                // Remove animation if unliked
+                setTimeout(() => {
+                    likeBtn.classList.remove('liked');
+                }, 600);
             }
             localStorage.setItem('card_likes', likeCount);
             localStorage.setItem('user_has_liked', userHasLiked);
@@ -390,11 +398,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function getDetailedStats() {
+    async function showStatsPopup() {
         try {
             const formData = new FormData();
-            formData.append('action', 'get_detailed_stats');
-            formData.append('admin_password', ADMIN_PASSWORD);
+            formData.append('action', 'get_stats');
 
             const response = await fetch(STATS_API, {
                 method: 'POST',
@@ -402,88 +409,41 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const data = await response.json();
-            if (data.success && data.is_admin) {
-                showStatsPopup(data);
-            } else {
-                showAdminWarning();
+            if (data.success) {
+                const statsPopup = document.getElementById('statsPopup');
+                const popupViewCount = document.getElementById('popupViewCount');
+                const popupLikeCount = document.getElementById('popupLikeCount');
+                const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
+                const likedByCount = document.getElementById('likedByCount');
+
+                if (popupViewCount) popupViewCount.textContent = data.views.toLocaleString();
+                if (popupLikeCount) popupLikeCount.textContent = data.likes.toLocaleString();
+                if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = data.unique_visitors.toLocaleString();
+                if (likedByCount) likedByCount.textContent = data.total_liked.toLocaleString();
+
+                statsPopup.classList.add('active');
+                document.body.style.overflow = 'hidden';
             }
         } catch (error) {
-            console.error('Error getting detailed stats:', error);
-            showAdminWarning();
+            console.error('Error showing stats:', error);
+            // Show local stats if server fails
+            const statsPopup = document.getElementById('statsPopup');
+            const likedByCount = document.getElementById('likedByCount');
+            if (likedByCount) likedByCount.textContent = 'Unknown';
+            statsPopup.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-    }
-
-    function showStatsPopup(data) {
-        const popupViewCount = document.getElementById('popupViewCount');
-        const popupLikeCount = document.getElementById('popupLikeCount');
-        const uniqueVisitorsEl = document.getElementById('uniqueVisitors');
-        const likedByCount = document.getElementById('likedByCount');
-        const adminActions = document.getElementById('adminActions');
-
-        if (popupViewCount) popupViewCount.textContent = data.views.toLocaleString();
-        if (popupLikeCount) popupLikeCount.textContent = data.likes.toLocaleString();
-        if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = data.unique_visitors.toLocaleString();
-        if (likedByCount) likedByCount.textContent = data.total_liked_users.toLocaleString();
-        if (adminActions) adminActions.style.display = 'block';
-
-        const statsPopup = document.getElementById('statsPopup');
-        statsPopup.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    async function resetStats() {
-        if (confirm('Are you sure you want to reset all statistics? This cannot be undone!')) {
-            try {
-                const formData = new FormData();
-                formData.append('action', 'reset_stats');
-                formData.append('admin_password', ADMIN_PASSWORD);
-
-                const response = await fetch(STATS_API, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    alert('Statistics have been reset!');
-                    loadStats();
-                    closeStatsPopup();
-                } else {
-                    alert('Failed to reset stats: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error resetting stats:', error);
-                alert('Error resetting statistics');
-            }
-        }
-    }
-
-    function showAdminWarning() {
-        const adminWarning = document.getElementById('adminWarning');
-        adminWarning.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
 
     function closeStatsPopup() {
         const statsPopup = document.getElementById('statsPopup');
         statsPopup.classList.remove('active');
         document.body.style.overflow = '';
-        
-        const adminActions = document.getElementById('adminActions');
-        if (adminActions) adminActions.style.display = 'none';
-    }
-
-    function closeAdminWarning() {
-        const adminWarning = document.getElementById('adminWarning');
-        adminWarning.classList.remove('active');
-        document.body.style.overflow = '';
     }
 
     // ===== EVENT LISTENERS FOR STATS =====
     loadStats();
-    
+
     setTimeout(() => {
         trackView();
     }, 1000);
@@ -492,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (viewBtn) {
         viewBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            getDetailedStats();
+            showStatsPopup();
         });
     }
 
@@ -502,26 +462,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             handleLike();
         });
-
-        let longPressTimer;
-        likeBtn.addEventListener('touchstart', function(e) {
-            longPressTimer = setTimeout(() => {
-                adminLogin();
-            }, 3000);
-        });
-
-        likeBtn.addEventListener('touchend', () => clearTimeout(longPressTimer));
-        likeBtn.addEventListener('touchmove', () => clearTimeout(longPressTimer));
     }
 
     const closeStatsBtn = document.getElementById('closeStatsBtn');
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', closeStatsPopup);
-    }
-
-    const closeAdminBtn = document.getElementById('closeAdminBtn');
-    if (closeAdminBtn) {
-        closeAdminBtn.addEventListener('click', closeAdminWarning);
     }
 
     const statsPopup = document.getElementById('statsPopup');
@@ -533,60 +478,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const adminWarning = document.getElementById('adminWarning');
-    if (adminWarning) {
-        adminWarning.addEventListener('click', function(e) {
-            if (e.target === adminWarning) {
-                closeAdminWarning();
-            }
-        });
-    }
-
-    // Admin login function
-    window.adminLogin = function() {
-        const password = prompt("Enter admin password:");
-        if (password === ADMIN_PASSWORD) {
-            isAdmin = true;
-            alert("Admin access granted! You can now view detailed statistics.");
-            if (viewBtn) {
-                viewBtn.style.background = 'rgba(0, 255, 255, 0.3)';
-                viewBtn.style.borderColor = 'rgba(0, 255, 255, 0.6)';
-            }
-        } else {
-            alert("Incorrect password!");
-        }
-    };
-
-    window.resetStats = resetStats;
-
-    // ===== KEYBOARD SUPPORT =====
+    // Close popup with Escape key
     document.addEventListener('keydown', function(e) {
-        if (flipCard && (e.key === ' ' || e.key === 'Enter') && document.activeElement === flipCard) {
-            e.preventDefault();
-            flipCard.click();
-        }
         if (e.key === 'Escape') {
-            if (orientationWarning && orientationWarning.style.display === 'flex') {
-                orientationWarning.style.display = 'none';
-            }
-            if (statsPopup.classList.contains('active')) {
-                closeStatsPopup();
-            }
-            if (adminWarning.classList.contains('active')) {
-                closeAdminWarning();
-            }
-            if (panelOpen) {
-                togglePanel();
-            }
+            closeStatsPopup();
         }
     });
 
-    // ===== SERVICE WORKER (OPTIONAL) =====
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js').catch(function(error) {
-                console.log('ServiceWorker registration failed:', error);
-            });
-        });
-    }
+    // Load initial like state
+    window.addEventListener('load', function() {
+        const likeBtn = document.getElementById('likeBtn');
+        if (userHasLiked) {
+            likeBtn.classList.add('liked');
+        }
+    });
 });
