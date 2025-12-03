@@ -8,6 +8,57 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Like/View Counters -->
+    <div class="stats-container">
+        <button class="stat-btn" id="viewBtn">
+            <i class="fas fa-eye"></i>
+            <span class="stat-badge" id="viewCount">0</span>
+        </button>
+        <button class="stat-btn" id="likeBtn">
+            <i class="fas fa-heart"></i>
+            <span class="stat-badge" id="likeCount">0</span>
+        </button>
+    </div>
+
+    <!-- Stats Popup Modal -->
+    <div class="stats-popup" id="statsPopup">
+        <div class="stats-popup-content">
+            <div class="stats-popup-header">
+                <h3>Statistics</h3>
+                <button class="stats-close-btn" id="closeStatsBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <ul class="stats-list">
+                <li>
+                    <span>Total Views:</span>
+                    <span class="stat-number" id="popupViewCount">0</span>
+                </li>
+                <li>
+                    <span>Total Likes:</span>
+                    <span class="stat-number" id="popupLikeCount">0</span>
+                </li>
+                <li>
+                    <span>Unique Visitors:</span>
+                    <span class="stat-number" id="uniqueVisitors">0</span>
+                </li>
+                <li>
+                    <span>Liked By:</span>
+                    <span class="stat-number" id="likedByCount">0</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Admin Only Warning -->
+    <div class="admin-warning" id="adminWarning">
+        <div class="admin-warning-content">
+            <i class="fas fa-lock"></i>
+            <h3>Admin Access Only</h3>
+            <p>This action can only be performed by the administrator.</p>
+            <button class="admin-warning-close" id="closeAdminBtn">Close</button>
+        </div>
+    </div>
     <!-- Toggle Button for Sliding Panel -->
     <button class="panel-toggle" id="panelToggle">
         <i class="fas fa-chevron-left"></i>

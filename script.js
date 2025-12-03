@@ -332,4 +332,290 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    // ===== LIKE/VIEW STATISTICS WITH ADMIN CHECK =====
+    let viewCount = 0;
+    let likeCount = 0;
+    let uniqueVisitors = new Set();
+    let likedUsers = new Set();
+
+    // Admin detection (you can change this to your actual admin check)
+    const isAdmin = true; // Change this to true when you're the admin
+    const ADMIN_ID = "admin123"; // Your unique admin ID (change this)
+
+    // Check if user is admin (you can implement proper authentication here)
+    function checkIfAdmin() {
+        // For now, we'll check localStorage for admin token
+        // In production, you should implement proper authentication
+        const adminToken = localStorage.getItem('admin_token');
+        return adminToken === ADMIN_ID || isAdmin;
+    }
+
+    // Initialize stats from localStorage
+    function loadStats() {
+        const savedViews = localStorage.getItem('card_views');
+        const savedLikes = localStorage.getItem('card_likes');
+        const savedVisitors = localStorage.getItem('unique_visitors');
+        const savedLikedUsers = localStorage.getItem('liked_users');
+
+        if (savedViews) viewCount = parseInt(savedViews);
+        if (savedLikes) likeCount = parseInt(savedLikes);
+        if (savedVisitors) {
+            const visitorsArray = JSON.parse(savedVisitors);
+            uniqueVisitors = new Set(visitorsArray);
+        }
+        if (savedLikedUsers) {
+            const likedArray = JSON.parse(savedLikedUsers);
+            likedUsers = new Set(likedArray);
+        }
+
+        updateCounters();
+    }
+
+    // Save stats to localStorage
+    function saveStats() {
+        localStorage.setItem('card_views', viewCount.toString());
+        localStorage.setItem('card_likes', likeCount.toString());
+        localStorage.setItem('unique_visitors', JSON.stringify([...uniqueVisitors]));
+        localStorage.setItem('liked_users', JSON.stringify([...likedUsers]));
+    }
+
+    // Update counter displays
+    function updateCounters() {
+        document.getElementById('viewCount').textContent = viewCount;
+        document.getElementById('likeCount').textContent = likeCount;
+        document.getElementById('popupViewCount').textContent = viewCount;
+        document.getElementById('popupLikeCount').textContent = likeCount;
+        document.getElementById('uniqueVisitors').textContent = uniqueVisitors.size;
+        document.getElementById('likedByCount').textContent = likedUsers.size;
+    }
+
+    // Generate unique visitor ID
+    function getVisitorId() {
+        let visitorId = localStorage.getItem('visitor_id');
+        if (!visitorId) {
+            visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('visitor_id', visitorId);
+        }
+        return visitorId;
+    }
+
+    // Track view
+    function trackView() {
+        const visitorId = getVisitorId();
+
+        // Check if this is a new view (not from same visitor in last 30 minutes)
+        const lastViewTime = localStorage.getItem('last_view_time');
+        const now = Date.now();
+
+        if (!lastViewTime || (now - parseInt(lastViewTime)) > 30 * 60 * 1000) {
+            viewCount++;
+            localStorage.setItem('last_view_time', now.toString());
+        }
+
+        // Add to unique visitors
+        uniqueVisitors.add(visitorId);
+
+        saveStats();
+        updateCounters();
+    }
+
+    // Handle like
+    function handleLike() {
+        const visitorId = getVisitorId();
+
+        if (likedUsers.has(visitorId)) {
+            // User already liked - remove like
+            likeCount--;
+            likedUsers.delete(visitorId);
+        } else {
+            // Add new like
+            likeCount++;
+            likedUsers.add(visitorId);
+
+            // Add haptic feedback for like
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            // Animate like button
+            const likeBtn = document.getElementById('likeBtn');
+            likeBtn.classList.add('pulse');
+            setTimeout(() => {
+                likeBtn.classList.remove('pulse');
+            }, 300);
+        }
+
+        saveStats();
+        updateCounters();
+    }
+
+    // Show stats popup (admin only)
+    function showStatsPopup() {
+        if (checkIfAdmin()) {
+            updateCounters();
+            const statsPopup = document.getElementById('statsPopup');
+            statsPopup.classList.add('active');
+
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
+        } else {
+            showAdminWarning();
+        }
+    }
+
+    // Show admin warning
+    function showAdminWarning() {
+        const adminWarning = document.getElementById('adminWarning');
+        adminWarning.classList.add('active');
+
+        // Add haptic feedback
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    }
+
+    // Close stats popup
+    function closeStatsPopup() {
+        const statsPopup = document.getElementById('statsPopup');
+        statsPopup.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Close admin warning
+    function closeAdminWarning() {
+        const adminWarning = document.getElementById('adminWarning');
+        adminWarning.classList.remove('active');
+    }
+
+    // Admin login function (for demo - you should implement proper auth)
+    function adminLogin() {
+        const password = prompt("Enter admin password:");
+        if (password === "your_password_here") { // Change this password
+            localStorage.setItem('admin_token', ADMIN_ID);
+            alert("Admin access granted!");
+            location.reload();
+        } else {
+            alert("Incorrect password!");
+        }
+    }
+
+    // Event Listeners for stats
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load existing stats
+        loadStats();
+
+        // Track initial view
+        trackView();
+
+        // View button click
+        const viewBtn = document.getElementById('viewBtn');
+        if (viewBtn) {
+            viewBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showStatsPopup();
+            });
+        }
+
+        // Like button click
+        const likeBtn = document.getElementById('likeBtn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleLike();
+            });
+        }
+
+        // Close stats popup
+        const closeStatsBtn = document.getElementById('closeStatsBtn');
+        if (closeStatsBtn) {
+            closeStatsBtn.addEventListener('click', closeStatsPopup);
+        }
+
+        // Close admin warning
+        const closeAdminBtn = document.getElementById('closeAdminBtn');
+        if (closeAdminBtn) {
+            closeAdminBtn.addEventListener('click', closeAdminWarning);
+        }
+
+        // Close popups when clicking outside
+        const statsPopup = document.getElementById('statsPopup');
+        if (statsPopup) {
+            statsPopup.addEventListener('click', function(e) {
+                if (e.target === statsPopup) {
+                    closeStatsPopup();
+                }
+            });
+        }
+
+        const adminWarning = document.getElementById('adminWarning');
+        if (adminWarning) {
+            adminWarning.addEventListener('click', function(e) {
+                if (e.target === adminWarning) {
+                    closeAdminWarning();
+                }
+            });
+        }
+
+        // Close popups with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeStatsPopup();
+                closeAdminWarning();
+            }
+        });
+
+        // Optional: Add long-press on like button for admin login (hidden feature)
+        let longPressTimer;
+        if (likeBtn) {
+            likeBtn.addEventListener('touchstart', function(e) {
+                longPressTimer = setTimeout(function() {
+                    adminLogin();
+                }, 3000);
+            });
+
+            likeBtn.addEventListener('touchend', function() {
+                clearTimeout(longPressTimer);
+            });
+
+            likeBtn.addEventListener('touchmove', function() {
+                clearTimeout(longPressTimer);
+            });
+        }
+
+        // Add admin button to panel if you want
+        const panelContent = document.querySelector('.panel-content');
+        if (panelContent && !checkIfAdmin()) {
+            const adminBtn = document.createElement('button');
+            adminBtn.className = 'panel-action-btn admin-btn';
+            adminBtn.innerHTML = '<i class="fas fa-user-shield"></i><span>Admin Login</span>';
+            adminBtn.addEventListener('click', adminLogin);
+            panelContent.appendChild(adminBtn);
+        }
+    });
+
+    // Track page visibility changes for more accurate view counting
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Page became visible again, check if we should count as a new view
+            const lastActiveTime = localStorage.getItem('last_active_time');
+            const now = Date.now();
+
+            // If user was away for more than 5 minutes, count as new view
+            if (!lastActiveTime || (now - parseInt(lastActiveTime)) > 5 * 60 * 1000) {
+                trackView();
+            }
+
+            localStorage.setItem('last_active_time', now.toString());
+        }
+    });
+
+    // Reset view counter after 24 hours (optional)
+    function resetDailyStats() {
+        const lastReset = localStorage.getItem('last_reset_date');
+        const today = new Date().toDateString();
+
+        if (lastReset !== today) {
+            // Reset daily counters here if needed
+            localStorage.setItem('last_reset_date', today);
+        }
+    }
+
+    // Initialize daily reset
+    resetDailyStats();
 });
