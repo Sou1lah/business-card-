@@ -1558,13 +1558,14 @@ body.light-theme .admin-warning-content p {
     background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    z-index: 1000;
+    z-index: 2000;
     display: none;
     justify-content: center;
     align-items: center;
     padding: 20px;
     opacity: 0;
     transition: opacity 0.3s ease;
+    pointer-events: auto;
 }
 
 .qr-modal.active {
