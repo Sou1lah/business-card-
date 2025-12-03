@@ -2,686 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Matrix Business Card</title>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {margin: 0; padding: 0; box-sizing: border-box;}
-        
-        body {
-            background: #000;
-            min-height: 100vh;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            font-family: 'Ubuntu Mono', monospace;
-            transition: background 0.5s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow: auto;
-        }
-        
-        /* Fix for iOS Safari 100vh issue */
-        @supports (-webkit-touch-callout: none) {
-            body {
-                min-height: -webkit-fill-available;
-            }
-        }
-        
-        body.light-theme {
-            background: #f0f0f0;
-        }
-        
-        canvas {
-            display: block;
-            filter: blur(5px);
-            -webkit-filter: blur(5px);
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        
-        body.light-theme canvas {
-            filter: blur(5px) brightness(0.9);
-        }
-        
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: rgba(10, 10, 10, 0.7);
-            border-radius: 50%;
-            border: 2px solid rgb(255, 255, 255);
-            color: rgb(255, 255, 255);
-            font-size: 22px;
-            cursor: pointer;
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-        
-        body.light-theme .theme-toggle {
-            background: rgba(255, 255, 255, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: #333;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .theme-toggle:hover {
-            transform: scale(1.1);
-        }
-        
-        .scene {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 300px;
-            perspective: 1000px;
-            z-index: 100;
-            margin: 0 auto;
-        }
-
-        .card {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            transform-style: preserve-3d;
-            transform-origin: center center;
-            transition: transform 0.8s;
-            border-radius: 13px;
-        }
-
-        .card.is-flipped {
-            transform: rotateY(180deg);
-        }
-
-        .card__face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 13px;
-            overflow: hidden;
-            transition: all 0.5s ease;
-        }
-
-        .card__face--front {
-            background: rgba(10, 10, 10, 0.7);
-            backdrop-filter: blur(22px) saturate(180%);
-            -webkit-backdrop-filter: blur(22px) saturate(180%);
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .card.is-flipped .card__face--front {
-            visibility: hidden;
-            opacity: 0;
-        }
-        
-        body.light-theme .card__face--front {
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.5s ease;
-        }
-
-        .card__face--back {
-            background: rgba(10, 10, 10, 0.7);
-            backdrop-filter: blur(10px) saturate(180%);
-            -webkit-backdrop-filter: blur(10px) saturate(180%);
-            transform: rotateY(180deg);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
-        
-        body.light-theme .card__face--back {
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-        }
-        
-        .top-section {
-            height: 70%;
-            display: flex;
-            padding: 25px;
-        }
-        
-        .profile-pic {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin-right: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 36px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.5s ease;
-            backdrop-filter: blur(5px);
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-            background-image: url('https://i.pinimg.com/736x/f8/4b/e9/f84be98bcaf36ef0865dce31ee60a61a.jpg');
-            flex-shrink: 0;
-        }
-        
-        body.light-theme .profile-pic {
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .info-container {
-            margin-top: 30px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
-        .info-item {
-            margin-bottom: 8px;
-            color: #fff;
-            transition: color 0.5s ease;
-        }
-        
-        body.light-theme .info-item {
-            color: #222;
-        }
-        
-        .info-label {
-            font-size: 10px;
-            color: #ccc;
-            margin-bottom: 2px;
-            transition: color 0.5s ease;
-        }
-        
-        body.light-theme .info-label {
-            color: #555;
-        }
-        
-        .info-value {
-            font-size: 20px;
-            font-weight: 500;
-        }
-        
-        .name-row {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 10px;
-        }
-        
-        .age-grade-row {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 10px;
-        }
-        
-        .university {
-            color: #fff;
-        }
-        
-        body.light-theme .university {
-            color: #333;
-        }
-        
-        .university .info-value {
-            color: #fff;
-            font-size: 18px;
-            transition: color 0.5s ease;
-        }
-        
-        body.light-theme .university .info-value {
-            color: #222;
-            font-weight: 700;
-        }
-        
-        .bottom-section {
-            height: 30%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 25px;
-            padding: 0 25px;
-            flex-wrap: wrap;
-        }
-        
-        /* for all social containers*/
-        .socialContainer {
-          width: 52px;
-          height: 52px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          transition-duration: .3s;
-          border-radius: 30%;
-          backdrop-filter: blur(5px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Dark theme */
-        .socialContainer {
-          background: rgba(255, 255, 255, 0.15);
-        }
-
-        /* Light theme */
-        body.light-theme .socialContainer {
-          background: rgba(255, 255, 255, 0.4);
-          box-shadow: 
-            0 4px 12px rgba(0, 0, 0, 0.1),
-            inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-        }
-
-        /* SVG colors for dark theme */
-        .socialSvg path {
-          fill: #fff;
-          transition: fill 0.3s ease;
-        }
-
-        /* SVG colors for light theme */
-        body.light-theme .socialSvg path {
-          fill: #333;
-        }
-
-        /* Hover effects work for both themes */
-        /* instagram*/
-        .containerOne:hover {
-          background-color: #d62976 !important;
-          transition-duration: .3s;
-        }
-        /* github */
-        .containerTwo.github:hover {
-          background-color: #0a0a0a !important;
-        }
-        /* linkedin*/
-        .containerThree:hover {
-          background-color: #0072b1 !important;
-          transition-duration: .3s;
-        }
-        /* email*/
-        .containerFour:hover {
-          background-color: #EA4335 !important;
-          transition-duration: .3s;
-        }
-        /* twitter (x.com) */
-        .containerFive:hover {
-          background-color: #6fbad3 !important;
-          transition-duration: .3s;
-        }
-
-        /* Make sure hover text stays white */
-        .socialContainer:hover .socialSvg path {
-          fill: #fff !important;
-        }
-
-        /* Keep the animation */
-        .socialContainer:hover .socialSvg {
-          animation: slide-in-top 0.3s both;
-        }
-
-        @keyframes slide-in-top {
-          0% {
-            transform: translateY(-50px);
-            opacity: 0;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .socialContainer:active {
-          transform: scale(0.9);
-          transition-duration: .3s;
-        }
-
-        .socialSvg {
-          width: 24px;
-        }
-        
-        .click-instruction {
-            position: absolute;
-            bottom: -30px;
-            width: 100%;
-            text-align: center;
-            color: #fff;
-            font-size: 14px;
-            z-index: 100;
-            transition: color 0.5s ease;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px;
-            border-radius: 5px;
-            backdrop-filter: blur(5px);
-        }
-        
-        body.light-theme .click-instruction {
-            color: #333;
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Languages section - CLEAR AND VISIBLE (not blurred) */
-        .languages-title {
-            color: #fff;
-            font-size: 22px;
-            margin-bottom: 30px;
-            text-align: center;
-            font-weight: 500;
-            transition: color 0.5s ease;
-        }
-        
-        body.light-theme .languages-title {
-            color: #222;
-        }
-        
-        .languages-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 10px;
-            width: 80%;
-            justify-items: center;
-        }
-        
-        .language-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            filter: none !important;
-            -webkit-filter: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            padding: 5px;
-            border: 1px solid;
-        }
-        
-        .language-icon:hover {
-            transform: scale(1.1);
-        }
-        
-        .language-text {
-            font-size: 12px;
-            font-weight: 500;
-            margin-top: 5px;
-            text-align: center;
-            filter: none !important;
-            -webkit-filter: none !important;
-        }
-        
-        .icon-large {
-            font-size: 24px;
-            filter: none !important;
-            -webkit-filter: none !important;
-        }
-        
-        /* Language-specific colors */
-        .html-icon {
-            background: rgba(227, 79, 38, 0.2);
-            border-color: rgba(227, 79, 38, 0.5) !important;
-            color: #E34F26;
-        }
-        
-        .css-icon {
-            background: rgba(21, 114, 182, 0.2);
-            border-color: rgba(21, 114, 182, 0.5) !important;
-            color: #1572B6;
-        }
-        
-        .js-icon {
-            background: rgba(247, 223, 30, 0.2);
-            border-color: rgba(247, 223, 30, 0.5) !important;
-            color: #F7DF1E;
-        }
-        
-        .php-icon {
-            background: rgba(119, 123, 179, 0.2);
-            border-color: rgba(119, 123, 179, 0.5) !important;
-            color: #777BB3;
-        }
-        
-        .lua-icon {
-            background: rgba(0, 0, 128, 0.2);
-            border-color: rgba(0, 0, 128, 0.5) !important;
-            color: #000080;
-        }
-        
-        .python-icon {
-            background: rgba(53, 114, 165, 0.2);
-            border-color: rgba(53, 114, 165, 0.5) !important;
-            color: #3572A5;
-        }
-        
-        .c-icon {
-            background: rgba(85, 85, 85, 0.2);
-            border-color: rgba(85, 85, 85, 0.5) !important;
-            color: #555555;
-        }
-        
-        .sql-icon {
-            background: rgba(255, 140, 0, 0.2);
-            border-color: rgba(255, 140, 0, 0.5) !important;
-            color: #FF8C00;
-        }
-        
-        /* Light theme adjustments for language icons */
-        body.light-theme .html-icon {
-            background: rgba(227, 79, 38, 0.1);
-            color: #E34F26;
-        }
-        
-        body.light-theme .css-icon {
-            background: rgba(21, 114, 182, 0.1);
-            color: #1572B6;
-        }
-        
-        body.light-theme .js-icon {
-            background: rgba(247, 223, 30, 0.1);
-            color: #D4B900;
-        }
-        
-        body.light-theme .php-icon {
-            background: rgba(119, 123, 179, 0.1);
-            color: #777BB3;
-        }
-        
-        body.light-theme .lua-icon {
-            background: rgba(0, 0, 128, 0.1);
-            color: #000080;
-        }
-        
-        body.light-theme .python-icon {
-            background: rgba(53, 114, 165, 0.1);
-            color: #3572A5;
-        }
-        
-        body.light-theme .c-icon {
-            background: rgba(85, 85, 85, 0.1);
-            color: #555555;
-        }
-        
-        body.light-theme .sql-icon {
-            background: rgba(255, 140, 0, 0.1);
-            color: #FF8C00;
-        }
-        
-        /* Touch device optimizations */
-        @media (hover: none) and (pointer: coarse) {
-            .socialContainer:hover .socialSvg {
-                animation: none;
-            }
-            
-            .language-icon:hover {
-                transform: none;
-            }
-            
-            .theme-toggle:hover {
-                transform: none;
-            }
-        }
-        /* For tablets */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .your-container {
-                width: 95% !important;
-            }
-        }
-
-        @media (max-width: 430px) {
-            /* Social media 2x2 grid on left */
-            .bottom-section {
-                position: absolute !important;
-                left: 60px !important;
-                bottom: 10px !important;
-                width: auto !important;
-                height: auto !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                background: transparent !important;
-            }
-            .top-section {
-                padding-top: 100px;
-            }
-             .profile-pic {
-                /*move pic up a little */
-                margin-top: -80px;
-            }
-            .info-value {
-                font-size: 15px !important;
-            }
-
-            .social-grid {
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 15px !important;
-            }
-
-            .social-column {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .socialContainer {
-                width: 44px !important;
-                height: 44px !important;
-                /*make them stack 2 under 2 under pfp*/
-                margin: 0 !important;
-                
-            }
-
-            /* Adjust card to make space */
-            .card__face--front {
-                padding-bottom: 100px !important;
-                position: relative !important;
-            }
-        }
-    </style>
 </head>
 <body>
+    <!-- Theme Toggle -->
     <button class="theme-toggle" id="themeToggle">
         <i class="fas fa-moon"></i>
     </button>
     
-    <canvas></canvas>
+    <!-- Matrix Canvas -->
+    <canvas id="matrixCanvas"></canvas>
     
-    <div class="scene">
-        <div class="card">
-            <div class="card__face card__face--front">
-                <div class="top-section">
+    <!-- Orientation Warning -->
+    <div class="orientation-warning" id="orientationWarning">
+        <i class="fas fa-mobile-alt"></i>
+        <p>Please rotate your device</p>
+        <p>to portrait mode for the best experience</p>
+    </div>
+    
+    <!-- Main Card -->
+    <div class="card-container">
+        <div class="flip-card" id="flipCard">
+            <!-- Front Side -->
+            <div class="card-face card-front">
+                <div class="profile-section">
                     <div class="profile-pic">
-                        <!-- Image added via CSS background-image -->
+                        <img src="https://i.pinimg.com/736x/f8/4b/e9/f84be98bcaf36ef0865dce31ee60a61a.jpg" alt="">
                     </div>
-                    <div class="info-container">
-                        <div class="name-row">
-                            <div class="info-item">
-                                <div class="info-label">FIRST NAME</div>
-                                <div class="info-value">SOUILAH</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">LAST NAME</div>
-                                <div class="info-value">AHMED WAEL</div>
-                            </div>
-                        </div>
-                        <div class="age-grade-row">
-                            <div class="info-item">
-                                <div class="info-label">AGE</div>
-                                <div class="info-value">20</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">GRADE</div>
-                                <div class="info-value">LICENCE 3</div>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">DEGREE</div>
-                            <div class="info-value">COMPUTER SCIENCE</div>
-                        </div>
-                        <div class="info-item university">
-                            <div class="info-label">UNIVERSITY</div>
-                            <div class="info-value">BADJI MOKHTAR UNIVERSITY</div>
-                        </div>
+                    <h1 class="name">SOUILAH AHMED WAEL</h1>
+                    <div class="title">Computer Science Student</div>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">AGE</span>
+                        <span class="info-value">20</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">GRADE</span>
+                        <span class="info-value">LICENCE 3</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">DEGREE</span>
+                        <span class="info-value">COMPUTER SCIENCE</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">UNIVERSITY</span>
+                        <span class="info-value">BADJI MOKHTAR UNIVERSITY</span>
                     </div>
                 </div>
-                <div class="bottom-section">
-                  <a href="https://www.instagram.com/waaaeeelll_08/" target="_blank" class="socialContainer containerOne instagram" onclick="event.stopPropagation()">
-                    <svg class="socialSvg instagramSvg" viewBox="0 0 16 16">
-                      <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 1 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 1 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 1 1 0-5.334z"></path>
-                    </svg>
-                  </a>
-
-                  <a href="https://github.com/Sou1lah" target="_blank" class="socialContainer containerTwo github" onclick="event.stopPropagation()">
-                    <svg class="socialSvg githubSvg" viewBox="0 0 16 16">
-                      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
-                    </svg>
-                  </a>
-
-                  <a href="#" target="_blank" class="socialContainer containerThree linkedin" onclick="event.stopPropagation()">
-                    <svg class="socialSvg linkdinSvg" viewBox="0 0 448 512">
-                      <path d="M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z"></path>
-                    </svg>
-                  </a>
-
-                  <a href="mailto:ahmedsouilah572@gmail.com" class="socialContainer containerFour email" onclick="event.stopPropagation()">
-                    <svg class="socialSvg emailSvg" viewBox="0 0 24 24">
-                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"></path>
-                    </svg>
-                  </a>
-              
-                  <!-- <a href="https://x.com/wael_souilah" target="_blank" class="socialContainer containerFive twitter" onclick="event.stopPropagation()">
-                    <svg class="socialSvg twitterSvg" viewBox="0 0 16 16">
-                      <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"></path>
-                    </svg>
-                  </a> -->
+                
+                <div class="social-icons">
+                    <a href="https://www.instagram.com/waaaeeelll_08/" target="_blank" class="social-icon instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://github.com/Sou1lah" target="_blank" class="social-icon github">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" target="_blank" class="social-icon linkedin">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:ahmedsouilah572@gmail.com" class="social-icon email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
                 </div>
             </div>
             
-            <!-- Clean back card with glassy background and language icons -->
-            <div class="card__face card__face--back">
-                <div class="languages-title">CODING LANGUAGES</div>
+            <!-- Back Side -->
+            <div class="card-face card-back">
+                <h2 class="languages-title">CODING LANGUAGES</h2>
                 <div class="languages-grid">
                     <!-- HTML - Orange -->
                     <div class="language-icon html-icon">
@@ -749,10 +141,11 @@
                 </div>
             </div>
         </div>
-        <div class="click-instruction">Click card to flip</div>
+        
     </div>
-    
+
     <script>
+        // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle.querySelector('i');
         
@@ -767,103 +160,143 @@
             }
         });
         
+        // Load saved theme
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
             document.body.classList.add('light-theme');
             themeIcon.className = 'fas fa-sun';
         }
         
-        var canvas = document.querySelector('canvas'),
-            ctx = canvas.getContext('2d');
+        // Card Flip
+        const flipCard = document.getElementById('flipCard');
         
-        function initCanvas() {
+        flipCard.addEventListener('click', function(e) {
+            // Don't flip if clicking on social icons
+            if (!e.target.closest('.social-icon') && !e.target.closest('.language-icon')) {
+                this.classList.toggle('flipped');
+            }
+        });
+        
+        // Matrix Effect
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
-            var letters = 'ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ';
-            letters = letters.split('');
-            
-            var fontSize = 10,
-                columns = canvas.width / fontSize;
-            
-            var drops = [];
-            for (var i = 0; i < columns; i++) {
-              drops[i] = Math.random() * canvas.height / fontSize;
-            }
-            
-            var colors = ['#ff0000', '#ff3300', '#ff6600', '#ff9900', '#ffcc00', 
-                          '#ffff00', '#ccff00', '#99ff00', '#66ff00', '#33ff00',
-                          '#00ff00', '#00ff33', '#00ff66', '#00ff99', '#00ffcc',
-                          '#00ffff', '#00ccff', '#0099ff', '#0066ff', '#0033ff',
-                          '#0000ff', '#3300ff', '#6600ff', '#9900ff', '#cc00ff',
-                          '#ff00ff', '#ff00cc', '#ff0099', '#ff0066', '#ff0033'];
-            
-            function draw() {
-              if (document.body.classList.contains('light-theme')) {
-                ctx.fillStyle = 'rgba(255, 255, 255, .03)';
-              } else {
-                ctx.fillStyle = 'rgba(0, 0, 0, .08)';
-              }
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              for (var i = 0; i < drops.length; i++) {
-                var text = letters[Math.floor(Math.random() * letters.length)];
-                var colorIndex = (i + Math.floor(Date.now() / 80)) % colors.length;
-                ctx.fillStyle = colors[colorIndex];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                drops[i] += 1.5;
-                if (drops[i] * fontSize > canvas.height && Math.random() > .90) {
-                  drops[i] = 0;
-                }
-              }
-            }
-            
-            setInterval(draw, 25);
         }
         
-        initCanvas();
-
-        // Card flip functionality - Fixed to not flip when clicking links
-        var card = document.querySelector('.card');
-        
-        card.addEventListener('click', function(e) {
-            // Only flip if click is not on a social media link or its children
-            if (!e.target.closest('.socialContainer') && !e.target.closest('a')) {
-                this.classList.toggle('is-flipped');
+        function initMatrix() {
+            resizeCanvas();
+            
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%"\'#&_(),.;:?!\\|{}<>[]^~';
+            const fontSize = 14;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = [];
+            
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
             }
+            
+            function draw() {
+                // Semi-transparent black background for trail effect
+                if (document.body.classList.contains('light-theme')) {
+                    ctx.fillStyle = 'rgba(240, 240, 240, 0.05)';
+                } else {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                }
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the characters
+                ctx.font = `${fontSize}px monospace`;
+                
+                for (let i = 0; i < drops.length; i++) {
+                    // Random character
+                    const char = letters[Math.floor(Math.random() * letters.length)];
+                    
+                    // Green gradient effect
+                    const gradient = ctx.createLinearGradient(0, drops[i] * fontSize, 0, (drops[i] + 1) * fontSize);
+                    
+                    if (document.body.classList.contains('light-theme')) {
+                        gradient.addColorStop(0, '#006600');
+                        gradient.addColorStop(0.5, '#009900');
+                        gradient.addColorStop(1, '#00cc00');
+                    } else {
+                        gradient.addColorStop(0, '#00ff00');
+                        gradient.addColorStop(0.5, '#33ff33');
+                        gradient.addColorStop(1, '#66ff66');
+                    }
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+                    
+                    // Move drop down
+                    drops[i]++;
+                    
+                    // Randomly reset drop to top
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                }
+            }
+            
+            // Animation loop
+            setInterval(draw, 50);
+        }
+        
+        // Handle orientation changes
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(resizeCanvas, 100);
         });
         
-        // Add click handlers to all social links to prevent card flip
-        var socialLinks = document.querySelectorAll('.socialContainer');
-        socialLinks.forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.stopPropagation();
-                // Allow default link behavior
-            });
-        });
+        // Initialize
+        initMatrix();
         
-        // Handle orientation changes and resize
-        let resizeTimer;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                initCanvas();
-            }, 250);
-        });
-        
-        // Mobile touch improvements
+        // Touch device optimizations
         if ('ontouchstart' in window) {
             document.body.classList.add('touch-device');
             
-            // Prevent double-tap zoom on card
-            card.addEventListener('touchstart', function(e) {
-                if (!e.target.closest('.socialContainer') && !e.target.closest('a')) {
+            // Prevent zoom on double tap
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
                     e.preventDefault();
                 }
             }, { passive: false });
             
-            // Add tap delay removal for better responsiveness
-            card.style.touchAction = 'manipulation';
+            // Add haptic feedback on social icon tap (if supported)
+            const socialIcons = document.querySelectorAll('.social-icon, .language-icon');
+            socialIcons.forEach(icon => {
+                icon.addEventListener('touchstart', function() {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(10);
+                    }
+                });
+            });
         }
+        
+        // Prevent context menu on long press
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Handle orientation warning
+        const orientationWarning = document.getElementById('orientationWarning');
+        
+        function checkOrientation() {
+            if (window.innerHeight < 500 && window.innerWidth > window.innerHeight) {
+                orientationWarning.style.display = 'flex';
+            } else {
+                orientationWarning.style.display = 'none';
+            }
+        }
+        
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        // Initial check
+        checkOrientation();
     </script>
 </body>
 </html>
