@@ -1549,6 +1549,7 @@ body.light-theme .admin-warning-content p {
     }
 }
 /* QR Code Modal */
+
 .qr-modal {
     position: fixed;
     top: 0;
@@ -1565,12 +1566,13 @@ body.light-theme .admin-warning-content p {
     padding: 20px;
     opacity: 0;
     transition: opacity 0.3s ease;
-    pointer-events: auto;
+    pointer-events: none;
 }
 
 .qr-modal.active {
     display: flex;
     opacity: 1;
+    pointer-events: auto;
     animation: fadeIn 0.3s ease;
 }
 

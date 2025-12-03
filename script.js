@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function initMatrix() {
             resizeCanvas();
             
-            const letters = '01';
+            const letters = 'AZBIBAZIUBAZIUBIZUEABIUZABEIUAZBEIUABZEIUAZBEIUAZBEIZUAB';
             const fontSize = 12;
             const columns = Math.floor(canvas.width / fontSize);
             const drops = [];
