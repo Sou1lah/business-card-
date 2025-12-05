@@ -1,3 +1,5 @@
 {
-    "liveServer.settings.multiRootWorkspaceName": "business card"
+    "liveServer.settings.multiRootWorkspaceName": "business card",
+    "CodeGPT.apiKey": "grok",
+    "liveServer.settings.port": 5501
 }

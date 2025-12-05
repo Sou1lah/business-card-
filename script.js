@@ -83,82 +83,82 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ===== MATRIX EFFECT =====
-    const canvas = document.getElementById('matrixCanvas');
+    // const canvas = document.getElementById('matrixCanvas');
     
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
+    // if (canvas) {
+    //     const ctx = canvas.getContext('2d');
         
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+    //     function resizeCanvas() {
+    //         canvas.width = window.innerWidth;
+    //         canvas.height = window.innerHeight;
+    //     }
         
-        function initMatrix() {
-            resizeCanvas();
+    //     function initMatrix() {
+    //         resizeCanvas();
             
-            const letters = 'AZBIBAZIUBAZIUBIZUEABIUZABEIUAZBEIUABZEIUAZBEIUAZBEIZUAB';
-            const fontSize = 12;
-            const columns = Math.floor(canvas.width / fontSize);
-            const drops = [];
+    //         const letters = 'AZBIBAZIUBAZIUBIZUEABIUZABEIUAZBEIUABZEIUAZBEIUAZBEIZUAB';
+    //         const fontSize = 12;
+    //         const columns = Math.floor(canvas.width / fontSize);
+    //         const drops = [];
             
-            for (let i = 0; i < columns; i++) {
-                drops[i] = Math.random() * -100;
-            }
+    //         for (let i = 0; i < columns; i++) {
+    //             drops[i] = Math.random() * -100;
+    //         }
             
-            function draw() {
-                if (document.body.classList.contains('light-theme')) {
-                    ctx.fillStyle = 'rgba(240, 240, 240, 0.04)';
-                } else {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
-                }
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //         function draw() {
+    //             if (document.body.classList.contains('light-theme')) {
+    //                 ctx.fillStyle = 'rgba(240, 240, 240, 0.04)';
+    //             } else {
+    //                 ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+    //             }
+    //             ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                ctx.font = `${fontSize}px monospace`;
+    //             ctx.font = `${fontSize}px monospace`;
                 
-                for (let i = 0; i < drops.length; i++) {
-                    const char = letters[Math.floor(Math.random() * letters.length)];
+    //             for (let i = 0; i < drops.length; i++) {
+    //                 const char = letters[Math.floor(Math.random() * letters.length)];
                     
-                    if (document.body.classList.contains('light-theme')) {
-                        ctx.fillStyle = '#009900';
-                    } else {
-                        ctx.fillStyle = '#00ff00';
-                    }
+    //                 if (document.body.classList.contains('light-theme')) {
+    //                     ctx.fillStyle = '#009900';
+    //                 } else {
+    //                     ctx.fillStyle = '#00ff00';
+    //                 }
                     
-                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-                    drops[i]++;
+    //                 ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+    //                 drops[i]++;
                     
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                }
-            }
+    //                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+    //                     drops[i] = 0;
+    //                 }
+    //             }
+    //         }
             
-            let lastTime = 0;
-            function animate(time) {
-                if (time - lastTime > 50) {
-                    draw();
-                    lastTime = time;
-                }
-                requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
-        }
+    //         let lastTime = 0;
+    //         function animate(time) {
+    //             if (time - lastTime > 50) {
+    //                 draw();
+    //                 lastTime = time;
+    //             }
+    //             requestAnimationFrame(animate);
+    //         }
+    //         requestAnimationFrame(animate);
+    //     }
         
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(resizeCanvas, 250);
-        });
+    //     let resizeTimeout;
+    //     window.addEventListener('resize', function() {
+    //         clearTimeout(resizeTimeout);
+    //         resizeTimeout = setTimeout(resizeCanvas, 250);
+    //     });
         
-        window.addEventListener('orientationchange', function() {
-            setTimeout(function() {
-                resizeCanvas();
-                initMatrix();
-            }, 100);
-        });
+    //     window.addEventListener('orientationchange', function() {
+    //         setTimeout(function() {
+    //             resizeCanvas();
+    //             initMatrix();
+    //         }, 100);
+    //     });
         
-        initMatrix();
-    }
+    //     initMatrix();
+    // }
     
     // ===== ORIENTATION WARNING =====
     const orientationWarning = document.getElementById('orientationWarning');
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fallbackIcon = document.createElement('i');
             fallbackIcon.className = 'fas fa-user-secret';
             fallbackIcon.style.fontSize = '50px';
-            fallbackIcon.style.color = '#0f0';
+            fallbackIcon.style.color = '#e0e0e0';
             this.parentElement.appendChild(fallbackIcon);
         });
     }
@@ -453,4 +453,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // ===== SUBTLE PARALLAX TILT (desktop only) =====
+    const cardContainer = document.querySelector('.card-container');
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const maxTilt = 9;
+
+    if (cardContainer && !prefersReduce && !isTouch) {
+        cardContainer.style.transition = 'transform 0.25s ease';
+        cardContainer.style.transformStyle = 'preserve-3d';
+
+        function handleMove(event) {
+            const { innerWidth, innerHeight } = window;
+            const x = (event.clientX / innerWidth - 0.5) * 2;
+            const y = (event.clientY / innerHeight - 0.5) * 2;
+            const tiltY = x * maxTilt;
+            const tiltX = -y * maxTilt;
+            cardContainer.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+        }
+
+        function resetTilt() {
+            cardContainer.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseleave', resetTilt);
+    }
 });
