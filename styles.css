@@ -778,6 +778,17 @@ body.light-theme .sql-icon {
     .name {
         font-size: 1.2rem;
     }
+    /* Add this media query for small screens */
+    .social-icons {
+        gap: 12px; /* Reduce gap */
+    }
+    .social-icon {
+        width: 36px; /* Smaller size */
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 16px;
+    }
 }
 
 /* Tall phones (iPhone 12/13 mini, etc) */
