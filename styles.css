@@ -205,17 +205,17 @@ html {
 
 /* Front Side - Mobile Optimized */
 .front-side {
-    background: rgba(10, 10, 10, 0.6);
+    background: rgba(10, 10, 10, 0.8);
     backdrop-filter: blur(60px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.784);
 }
 /* Back Side - Mobile Optimized */
 .back-side {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(10, 10, 10, 0.8);
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(252, 252, 252, 0.776);
     transform: rotateY(180deg);
     align-items: center;
     justify-content: center;
