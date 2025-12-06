@@ -2,44 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/error.css">
-    <title>Coming Soon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Business Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/card.css">
 </head>
 <body>
-    <main>
-      <svg class="face" viewBox="0 0 320 380" width="320px" height="380px" aria-label="A 404 becomes a face, looks to the sides, and blinks. The 4s slide up, the 0 slides down, and then a mouth appears.">
-        <g
-           fill="none"
-           stroke="currentcolor"
-           stroke-linecap="round"
-           stroke-linejoin="round"
-           stroke-width="25"
-           >
-          <g class="face__eyes" transform="translate(0, 112.5)">
-            <g transform="translate(15, 0)">
-              <polyline class="face__eye-lid" points="37,0 0,120 75,120" />
-              <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35" />
-            </g>
-            <g transform="translate(230, 0)">
-              <polyline class="face__eye-lid" points="37,0 0,120 75,120" />
-              <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35" />
-            </g>
-          </g>
-          <rect class="face__nose" rx="4" ry="4" x="132.5" y="112.5" width="55" height="155" />
-          <g stroke-dasharray="102 102" transform="translate(65, 334)">
-            <path class="face__mouth-left" d="M 0 30 C 0 30 40 0 95 0" stroke-dashoffset="-102" />
-            <path class="face__mouth-right" d="M 95 0 C 150 0 190 30 190 30" stroke-dashoffset="102" />
-          </g>
-        </g>
-      </svg>
-      
-      <div class="message-container">
-          <div class="message">
-              <span class="status-indicator"></span>
-              Working to Fix...
-          </div>
-      </div>
-    </main>    
+    <!-- Background grid overlay -->
+    <div class="grid-container" aria-hidden="true"></div>
+
+    <!-- Admin Only Warning -->
+    <div class="admin-warning" id="adminWarning">
+        <div class="admin-warning-content">
+            <i class="fas fa-lock"></i>
+            <h3>Admin Access Only</h3>
+            <p>This action can only be performed by the administrator.</p>
+            <button class="admin-warning-close" id="closeAdminBtn">Close</button>
+        </div>
+    </div>
+    
+    <!-- Toggle Button for Sliding Panel -->
+    <button class="panel-toggle" id="panelToggle">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    
+    <!-- Sliding Panel -->
+    <div class="sliding-panel" id="slidingPanel">
+        <div class="panel-header">
+            <h3>Quick Actions</h3>
+            <button class="panel-close" id="panelClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="panel-content">
+            <button class="panel-action-btn flip-btn" id="panelFlipBtn">
+                <i class="fas fa-user-graduate"></i>
+                <span>Portfolio</span>
+            </button>
+            <button class="panel-action-btn qr-btn">
+                <i class="fas fa-qrcode"></i>
+                <span>QR Code</span>
+            </button>
+            <!-- <button class="panel-action-btn theme-btn" id="panelThemeToggle">
+                <i class="fas fa-palette"></i>
+                <span>Toggle Theme</span>
+            </button> -->
+            <button class="panel-action-btn download-btn">
+                <i class="fas fa-download"></i>
+                <span>Download CV</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Matrix Canvas -->
+    <!-- <canvas id="matrixCanvas"></canvas> -->
+    
+    <!-- Orientation Warning -->
+    <div class="orientation-warning" id="orientationWarning">
+        <i class="fas fa-mobile-alt"></i>
+        <p>Please rotate your device</p>
+        <p>to portrait mode for the best experience</p>
+    </div>
+    
+    <!-- Main Card -->
+    <div class="card-container">
+        <div class="flip-card" id="flipCard">
+            <!-- Front Side -->
+            <div class="card-side front-side">
+                <div class="profile-section">
+                    <div class="profile-pic">
+                        <img src="../assets/pfp.jpg" alt="">
+                    </div>
+                    <h1 class="name">SOUILAH AHMED WAEL</h1>
+                    <div class="title">Computer Science Student</div>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">AGE</span>
+                        <span class="info-value">20</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">GRADE</span>
+                        <span class="info-value">LICENCE 3</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">DEGREE</span>
+                        <span class="info-value">COMPUTER SCIENCE</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">UNIVERSITY</span>
+                        <span class="info-value">BADJI MOKHTAR UNIVERSITY</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">LIVES</span>
+                        <span class="info-value">ANNABA</span>
+                    </div>
+                </div>
+                
+                <div class="social-icons">
+                    <a href="https://www.instagram.com/waaaeeelll_08/" target="_blank" class="social-icon instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://github.com/Sou1lah" target="_blank" class="social-icon github">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" target="_blank" class="social-icon linkedin">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:ahmedsouilah572@gmail.com" class="social-icon email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Back Side -->
+            <div class="card-side back-side">
+                <h2 class="languages-title">CODING LANGUAGES</h2>
+                <div class="languages-grid">
+                    <!-- HTML - Orange -->
+                    <div class="language-icon html-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-html5"></i>
+                        </div>
+                        <div class="language-text">HTML</div>
+                    </div>
+                    
+                    <!-- CSS - Blue -->
+                    <div class="language-icon css-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-css3-alt"></i>
+                        </div>
+                        <div class="language-text">CSS</div>
+                    </div>
+                    
+                    <!-- JavaScript - Yellow -->
+                    <div class="language-icon js-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-js"></i>
+                        </div>
+                        <div class="language-text">JS</div>
+                    </div>
+                    
+                    <!-- PHP - Purple -->
+                    <div class="language-icon php-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-php"></i>
+                        </div>
+                        <div class="language-text">PHP</div>
+                    </div>
+                    
+                    <!-- Lua - Dark Blue -->
+                    <div class="language-icon lua-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="language-text">Lua</div>
+                    </div>
+                    
+                    <!-- Python - Blue -->
+                    <div class="language-icon python-icon">
+                        <div class="icon-large">
+                            <i class="fab fa-python"></i>
+                        </div>
+                        <div class="language-text">Python</div>
+                    </div>
+                    
+                    <!-- C - Gray -->
+                    <div class="language-icon c-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-c"></i>
+                        </div>
+                        <div class="language-text">C</div>
+                    </div>
+                    
+                    <!-- SQL - Orange -->
+                    <div class="language-icon sql-icon">
+                        <div class="icon-large">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="language-text">SQL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flip-instruction">Tap card to flip</div>
+    </div>
+    
+    <!-- QR Code Modal -->
+    <div class="qr-modal" id="qrModal">
+        <div class="qr-modal-content">
+            <div class="qr-modal-header">
+                <h3>My QR Code</h3>
+                <button class="qr-close-btn" id="closeQrBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="qr-image-container">
+                <img src="assets/QR.png" alt="QR Code" class="qr-image">
+            </div>
+            <p class="qr-instruction">Scan this QR code to connect</p>
+        </div>
+    </div>
+
+    <!-- Portfolio Coming Soon Modal -->
+    <div class="coming-soon-modal" id="portfolioModal">
+        <div class="coming-soon-content">
+            <div class="coming-soon-header">
+                <h3>Portfolio</h3>
+                <button class="coming-soon-close" id="closePortfolioBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="coming-soon-body">
+                <i class="fas fa-code coming-soon-icon"></i>
+                <p class="coming-soon-text">Portfolio section is coming soon!</p>
+                <p class="coming-soon-subtext">Working on showcasing my projects...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download CV Coming Soon Modal -->
+    <div class="coming-soon-modal" id="downloadModal">
+        <div class="coming-soon-content">
+            <div class="coming-soon-header">
+                <h3>Download CV</h3>
+                <button class="coming-soon-close" id="closeDownloadBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="coming-soon-body">
+                <i class="fas fa-file-download coming-soon-icon"></i>
+                <p class="coming-soon-text">CV download is coming soon!</p>
+                <p class="coming-soon-subtext">Preparing my resume for download...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="../script.js"></script>
 </body>
 </html>
