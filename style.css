@@ -251,8 +251,8 @@ html {
 } */
  /* Morphing Profile Picture */
 .morph-shape-profile {
-    width: 100%;
-    height: 100%;
+    width: 150%;
+    height: 150%;
     background: url('./assets/pfp.jpg') center/cover no-repeat;
     background-size: 150% auto;
     animation: morph 8s ease-in-out infinite;
